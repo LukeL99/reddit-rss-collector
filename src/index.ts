@@ -6,7 +6,7 @@ import postRoutes from "./routes/posts.js";
 import systemRoutes from "./routes/system.js";
 import filterRoutes from "./routes/filter.js";
 import { startCollector } from "./collector.js";
-import { startBackgroundFilter } from "./filter.js";
+import { startBackgroundTriage } from "./filter.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -39,6 +39,6 @@ app.listen(PORT, () => {
   // Start the collector service
   startCollector(COLLECT_INTERVAL);
 
-  // Start background filter (processes posts as they come in)
-  startBackgroundFilter();
+  // Start background triage (processes posts as they come in)
+  startBackgroundTriage();
 });

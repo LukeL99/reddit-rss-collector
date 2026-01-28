@@ -74,15 +74,15 @@
               class="w-full"
             >
           </div>
-          <div title="Only show posts with at least this opportunity score (0-10). Higher scores indicate stronger business opportunities.">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Min Opportunity: <span id="min-opportunity-value">0</span></label>
+          <div title="Only show posts with at least this triage score (0-10). Higher scores indicate stronger business opportunities.">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Min Opportunity: <span id="min-triage-value">0</span></label>
             <input
               type="range"
-              id="filter-min-opportunity"
+              id="filter-min-triage"
               min="0"
               max="10"
               value="0"
-              title="Only show posts with at least this opportunity score"
+              title="Only show posts with at least this triage score"
               class="w-full"
             >
           </div>
@@ -93,8 +93,8 @@
               <input type="checkbox" id="filter-flagged" class="w-4 h-4 text-blue-600 rounded" title="Show only flagged posts">
               <span class="text-sm font-medium text-gray-700">Flagged only</span>
             </label>
-            <label class="flex items-center space-x-2 cursor-pointer" title="When checked, only shows posts identified as business opportunities">
-              <input type="checkbox" id="filter-opportunity" class="w-4 h-4 text-green-600 rounded" title="Show only opportunities">
+            <label class="flex items-center space-x-2 cursor-pointer" title="When checked, only shows posts identified as business passed">
+              <input type="checkbox" id="filter-triage" class="w-4 h-4 text-green-600 rounded" title="Show only passed">
               <span class="text-sm font-medium text-gray-700">Opportunities only</span>
             </label>
           </div>
@@ -114,7 +114,7 @@
             <button
               onclick="triggerFilter()"
               id="filter-btn"
-              title="Run AI evaluation on unevaluated posts to identify business opportunities"
+              title="Run AI evaluation on unevaluated posts to identify business passed"
               class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
               Filter Now
@@ -221,12 +221,12 @@
       }
     }
 
-    // Render opportunity score badge
+    // Render triage score badge
     function renderOpportunityBadge(post) {
-      if (!post.isEvaluated) return '';
-      if (post.opportunityScore === null) return '';
+      if (!post.isTriaged) return '';
+      if (post.triageScore === null) return '';
 
-      const score = post.opportunityScore;
+      const score = post.triageScore;
       let bgColor, textColor;
 
       if (score >= 7) {
@@ -240,7 +240,7 @@
         textColor = 'text-gray-600';
       }
 
-      return `<span class="px-2 py-1 text-xs font-medium rounded-full ${bgColor} ${textColor}" title="Opportunity Score">
+      return `<span class="px-2 py-1 text-xs font-medium rounded-full ${bgColor} ${textColor}" title="Triage Score">
         ${score}/10
       </span>`;
     }
@@ -259,7 +259,7 @@
           statusEl.innerHTML = `
             <span class="inline-flex items-center">
               <span class="w-2 h-2 rounded-full ${data.isRunning ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'} mr-2"></span>
-              ${data.evaluated}/${data.total} evaluated &bull; ${data.opportunities} opportunities
+              ${data.triaged}/${data.total} evaluated &bull; ${data.passed} opportunities
               ${data.pending > 0 ? `&bull; <span class="text-orange-500">${data.pending} pending</span>` : ''}
             </span>
           `;
@@ -303,8 +303,8 @@
 
         if (data.success) {
           const msg = data.stopped 
-            ? `Filter stopped. Evaluated ${data.evaluated} posts, found ${data.opportunities} opportunities.`
-            : `Filter complete! Evaluated ${data.evaluated} posts, found ${data.opportunities} opportunities.`;
+            ? `Filter stopped. Evaluated ${data.triaged} posts, found ${data.passed} opportunities.`
+            : `Filter complete! Evaluated ${data.triaged} posts, found ${data.passed} opportunities.`;
           alert(msg);
           loadPosts();
         } else {
@@ -362,9 +362,9 @@
       const search = document.getElementById('filter-search').value;
       const subreddit = document.getElementById('filter-subreddit').value;
       const minScore = document.getElementById('filter-min-score').value;
-      const minOpportunity = document.getElementById('filter-min-opportunity').value;
+      const minOpportunity = document.getElementById('filter-min-triage').value;
       const flagged = document.getElementById('filter-flagged').checked;
-      const opportunityOnly = document.getElementById('filter-opportunity').checked;
+      const triageOnly = document.getElementById('filter-triage').checked;
 
       const params = new URLSearchParams();
       if (search) params.set('search', search);
@@ -372,7 +372,7 @@
       if (minScore > 0) params.set('minScore', minScore);
       if (minOpportunity > 0) params.set('minOpportunityScore', minOpportunity);
       if (flagged) params.set('flagged', 'true');
-      if (opportunityOnly) params.set('opportunity', 'true');
+      if (triageOnly) params.set('triage', 'true');
       params.set('limit', limit);
       params.set('offset', currentOffset);
 
@@ -400,7 +400,7 @@
       }
 
       container.innerHTML = posts.map(post => `
-        <div class="bg-white rounded-lg shadow p-4 ${post.isFlagged ? 'border-l-4 border-yellow-500' : ''} ${post.isOpportunity ? 'border-l-4 border-green-500' : ''}">
+        <div class="bg-white rounded-lg shadow p-4 ${post.isFlagged ? 'border-l-4 border-yellow-500' : ''} ${post.passedTriage ? 'border-l-4 border-green-500' : ''}">
           <div class="flex justify-between items-start">
             <div class="flex-1">
               <div class="flex items-center gap-2 flex-wrap">
@@ -419,10 +419,10 @@
                 &bull; ${timeAgo(post.createdUtc)}
                 &bull; ${post.score} points
                 &bull; ${post.numComments} comments
-                ${post.isEvaluated ? '' : '<span class="text-orange-500">&bull; Not evaluated</span>'}
+                ${post.isTriaged ? '' : '<span class="text-orange-500">&bull; Not triaged</span>'}
               </div>
               ${post.body ? `<p class="mt-2 text-gray-600 text-sm line-clamp-2">${escapeHtml(post.body.substring(0, 200))}${post.body.length > 200 ? '...' : ''}</p>` : ''}
-              ${post.opportunityReason ? `<p class="mt-2 text-sm text-green-700 bg-green-50 p-2 rounded">${escapeHtml(post.opportunityReason)}</p>` : ''}
+              ${post.triageReason ? `<p class="mt-2 text-sm text-green-700 bg-green-50 p-2 rounded">${escapeHtml(post.triageReason)}</p>` : ''}
             </div>
             <button
               onclick="toggleFlag('${post.id}', ${!post.isFlagged})"
@@ -630,8 +630,8 @@
       document.getElementById('min-score-value').textContent = e.target.value;
     });
 
-    document.getElementById('filter-min-opportunity').addEventListener('input', (e) => {
-      document.getElementById('min-opportunity-value').textContent = e.target.value;
+    document.getElementById('filter-min-triage').addEventListener('input', (e) => {
+      document.getElementById('min-triage-value').textContent = e.target.value;
     });
 
     document.getElementById('filter-search').addEventListener('keypress', (e) => {

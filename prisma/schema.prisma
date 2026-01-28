@@ -33,17 +33,28 @@ model Post {
   isFlagged   Boolean   @default(false) @map("is_flagged")
   subreddit   Subreddit @relation(fields: [subredditId], references: [id], onDelete: Cascade)
 
-  // Opportunity filtering
+  // Triage (automated by Gemini - quick first pass)
+  isTriaged       Boolean   @default(false) @map("is_triaged")
+  passedTriage    Boolean?  @map("passed_triage")
+  triageScore     Int?      @map("triage_score")
+  triageReason    String?   @map("triage_reason")
+  triagedAt       DateTime? @map("triaged_at")
+
+  // Evaluation (done by Glitch - deep analysis)
   isEvaluated       Boolean   @default(false) @map("is_evaluated")
-  isOpportunity     Boolean?  @map("is_opportunity")
-  opportunityScore  Int?      @map("opportunity_score")
-  opportunityReason String?   @map("opportunity_reason")
   evaluatedAt       DateTime? @map("evaluated_at")
+  marketSizeScore   Int?      @map("market_size_score")    // 1-10
+  wtpScore          Int?      @map("wtp_score")            // 1-10 willingness to pay
+  easeScore         Int?      @map("ease_score")           // 1-10 ease of implementation
+  competitionScore  Int?      @map("competition_score")    // 1-10 (10 = low competition = good)
+  totalScore        Int?      @map("total_score")          // sum of above (max 40)
+  evaluationNotes   String?   @map("evaluation_notes")
 
   @@index([subredditId])
   @@index([createdUtc])
   @@index([isFlagged])
+  @@index([isTriaged])
+  @@index([passedTriage])
   @@index([isEvaluated])
-  @@index([isOpportunity])
   @@map("posts")
 }

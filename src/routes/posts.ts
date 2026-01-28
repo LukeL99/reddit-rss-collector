@@ -13,9 +13,11 @@ router.get("/", async (req, res) => {
       minScore,
       flagged,
       since,
+      triaged,
+      passedTriage,
+      minTriageScore,
       evaluated,
-      opportunity,
-      minOpportunityScore,
+      triagedAfter,
       limit = "50",
       offset = "0",
     } = req.query;
@@ -63,25 +65,40 @@ router.get("/", async (req, res) => {
       }
     }
 
-    // Filter by evaluation status
+    // Filter by triage status
+    if (triaged === "true") {
+      where.isTriaged = true;
+    } else if (triaged === "false") {
+      where.isTriaged = false;
+    }
+
+    // Filter by passed triage status
+    if (passedTriage === "true") {
+      where.passedTriage = true;
+    } else if (passedTriage === "false") {
+      where.passedTriage = false;
+    }
+
+    // Minimum triage score filter
+    if (minTriageScore && typeof minTriageScore === "string") {
+      const score = parseInt(minTriageScore, 10);
+      if (!isNaN(score)) {
+        where.triageScore = { gte: score };
+      }
+    }
+
+    // Filter by evaluation status (deep evaluation by Glitch)
     if (evaluated === "true") {
       where.isEvaluated = true;
     } else if (evaluated === "false") {
       where.isEvaluated = false;
     }
 
-    // Filter by opportunity status
-    if (opportunity === "true") {
-      where.isOpportunity = true;
-    } else if (opportunity === "false") {
-      where.isOpportunity = false;
-    }
-
-    // Minimum opportunity score filter
-    if (minOpportunityScore && typeof minOpportunityScore === "string") {
-      const score = parseInt(minOpportunityScore, 10);
-      if (!isNaN(score)) {
-        where.opportunityScore = { gte: score };
+    // Filter by triage date (for new opportunities since last run)
+    if (triagedAfter && typeof triagedAfter === "string") {
+      const afterDate = new Date(triagedAfter);
+      if (!isNaN(afterDate.getTime())) {
+        where.triagedAt = { gte: afterDate };
       }
     }
 
@@ -117,10 +134,21 @@ router.get("/", async (req, res) => {
         createdUtc: p.createdUtc,
         fetchedAt: p.fetchedAt,
         isFlagged: p.isFlagged,
+        // Triage fields (Gemini)
+        isTriaged: p.isTriaged,
+        passedTriage: p.passedTriage,
+        triageScore: p.triageScore,
+        triageReason: p.triageReason,
+        triagedAt: p.triagedAt,
+        // Evaluation fields (Glitch)
         isEvaluated: p.isEvaluated,
-        isOpportunity: p.isOpportunity,
-        opportunityScore: p.opportunityScore,
-        opportunityReason: p.opportunityReason,
+        evaluatedAt: p.evaluatedAt,
+        marketSizeScore: p.marketSizeScore,
+        wtpScore: p.wtpScore,
+        easeScore: p.easeScore,
+        competitionScore: p.competitionScore,
+        totalScore: p.totalScore,
+        evaluationNotes: p.evaluationNotes,
       })),
       total,
       limit: take,
@@ -132,19 +160,55 @@ router.get("/", async (req, res) => {
   }
 });
 
-// PATCH /api/posts/:id - Update post (flag/unflag)
+// PATCH /api/posts/:id - Update post (flag/unflag or add evaluation)
 router.patch("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { isFlagged } = req.body;
+    const { 
+      isFlagged,
+      // Evaluation fields that Glitch can set
+      isEvaluated,
+      marketSizeScore,
+      wtpScore,
+      easeScore,
+      competitionScore,
+      totalScore,
+      evaluationNotes,
+    } = req.body;
 
-    if (typeof isFlagged !== "boolean") {
-      return res.status(400).json({ error: "isFlagged must be a boolean" });
+    const data: Prisma.PostUpdateInput = {};
+
+    if (typeof isFlagged === "boolean") {
+      data.isFlagged = isFlagged;
+    }
+
+    // Evaluation update
+    if (typeof isEvaluated === "boolean") {
+      data.isEvaluated = isEvaluated;
+      data.evaluatedAt = isEvaluated ? new Date() : null;
+    }
+    if (typeof marketSizeScore === "number") {
+      data.marketSizeScore = marketSizeScore;
+    }
+    if (typeof wtpScore === "number") {
+      data.wtpScore = wtpScore;
+    }
+    if (typeof easeScore === "number") {
+      data.easeScore = easeScore;
+    }
+    if (typeof competitionScore === "number") {
+      data.competitionScore = competitionScore;
+    }
+    if (typeof totalScore === "number") {
+      data.totalScore = totalScore;
+    }
+    if (typeof evaluationNotes === "string") {
+      data.evaluationNotes = evaluationNotes;
     }
 
     const post = await prisma.post.update({
       where: { id },
-      data: { isFlagged },
+      data,
       include: {
         subreddit: {
           select: { name: true },
@@ -165,10 +229,19 @@ router.patch("/:id", async (req, res) => {
       createdUtc: post.createdUtc,
       fetchedAt: post.fetchedAt,
       isFlagged: post.isFlagged,
+      isTriaged: post.isTriaged,
+      passedTriage: post.passedTriage,
+      triageScore: post.triageScore,
+      triageReason: post.triageReason,
+      triagedAt: post.triagedAt,
       isEvaluated: post.isEvaluated,
-      isOpportunity: post.isOpportunity,
-      opportunityScore: post.opportunityScore,
-      opportunityReason: post.opportunityReason,
+      evaluatedAt: post.evaluatedAt,
+      marketSizeScore: post.marketSizeScore,
+      wtpScore: post.wtpScore,
+      easeScore: post.easeScore,
+      competitionScore: post.competitionScore,
+      totalScore: post.totalScore,
+      evaluationNotes: post.evaluationNotes,
     });
   } catch (err) {
     console.error("Error updating post:", err);
