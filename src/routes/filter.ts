@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { filterNewPosts, getFilterStatus, requestStop } from "../filter.js";
+import { filterNewPosts, getFilterStatus, requestStop, isBackgroundFilterRunning } from "../filter.js";
 
 const router = Router();
 
-// Track if filtering is currently running
+// Track if manual batch filtering is currently running
 let isFiltering = false;
 
 // POST /api/filter - Trigger manual filter run
@@ -48,6 +48,7 @@ router.get("/status", async (_req, res) => {
     res.json({
       ...status,
       isRunning: isFiltering,
+      isBackgroundRunning: isBackgroundFilterRunning(),
       isConfigured: Boolean(process.env.GEMINI_API_KEY),
     });
   } catch (error) {

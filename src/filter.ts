@@ -223,3 +223,88 @@ export async function getFilterStatus(): Promise<{
     avgScore: avgResult._avg.opportunityScore,
   };
 }
+
+// Background filter state
+let backgroundFilterRunning = false;
+
+export function isBackgroundFilterRunning(): boolean {
+  return backgroundFilterRunning;
+}
+
+export async function startBackgroundFilter(): Promise<void> {
+  if (!process.env.GEMINI_API_KEY) {
+    console.log("[Filter] Background filter disabled - no GEMINI_API_KEY");
+    return;
+  }
+
+  if (backgroundFilterRunning) {
+    console.log("[Filter] Background filter already running");
+    return;
+  }
+
+  backgroundFilterRunning = true;
+  console.log("[Filter] Starting background filter...");
+
+  while (backgroundFilterRunning) {
+    try {
+      // Get one unevaluated post
+      const post = await prisma.post.findFirst({
+        where: { isEvaluated: false },
+        include: { subreddit: { select: { name: true } } },
+        orderBy: { createdUtc: "desc" },
+      });
+
+      if (!post) {
+        // No pending posts, sleep for 30 seconds then check again
+        await new Promise((resolve) => setTimeout(resolve, 30000));
+        continue;
+      }
+
+      // Evaluate the post
+      try {
+        const result = await evaluatePost(post);
+
+        await prisma.post.update({
+          where: { id: post.id },
+          data: {
+            isEvaluated: true,
+            isOpportunity: result.isOpportunity,
+            opportunityScore: result.score,
+            opportunityReason: result.reason,
+            evaluatedAt: new Date(),
+          },
+        });
+
+        console.log(
+          `[Filter] Evaluated: "${post.title.substring(0, 50)}..." - Score: ${result.score}, Opportunity: ${result.isOpportunity}`
+        );
+      } catch (error) {
+        console.error(`[Filter] Failed to evaluate post ${post.id}:`, error);
+        // Mark as evaluated to avoid infinite retry
+        await prisma.post.update({
+          where: { id: post.id },
+          data: {
+            isEvaluated: true,
+            isOpportunity: null,
+            opportunityScore: null,
+            opportunityReason: "Evaluation failed",
+            evaluatedAt: new Date(),
+          },
+        });
+      }
+
+      // Small delay between posts to respect rate limits
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    } catch (error) {
+      console.error("[Filter] Background filter error:", error);
+      // Sleep on error to avoid tight loop
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+    }
+  }
+
+  console.log("[Filter] Background filter stopped");
+}
+
+export function stopBackgroundFilter(): void {
+  backgroundFilterRunning = false;
+}
