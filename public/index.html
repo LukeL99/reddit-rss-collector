@@ -110,6 +110,8 @@
           
           <div class="flex-1"></div>
           
+          <button onclick="resetFilters()" class="px-3 py-1.5 text-sm text-dark-muted hover:text-white border border-dark-border rounded-md hover:bg-dark-border">Reset Filters</button>
+          
           <span id="filter-status" class="text-sm text-dark-muted"></span>
           
           <button onclick="triggerTriage()" id="triage-btn" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm">Triage Now</button>
@@ -158,6 +160,31 @@
         clearTimeout(timeout);
         timeout = setTimeout(() => func.apply(this, args), wait);
       };
+    }
+
+    // Reset all filters
+    function resetFilters() {
+      document.getElementById('filter-search').value = '';
+      document.getElementById('filter-subreddit').value = '';
+      document.getElementById('filter-min-upvotes').value = 0;
+      document.getElementById('min-upvotes-value').textContent = '0';
+      document.getElementById('filter-min-triage').value = 0;
+      document.getElementById('min-triage-value').textContent = '0';
+      document.getElementById('filter-min-total').value = 0;
+      document.getElementById('min-total-value').textContent = '0';
+      document.getElementById('filter-min-market').value = 0;
+      document.getElementById('min-market-value').textContent = '0';
+      document.getElementById('filter-min-wtp').value = 0;
+      document.getElementById('min-wtp-value').textContent = '0';
+      document.getElementById('filter-min-ease').value = 0;
+      document.getElementById('min-ease-value').textContent = '0';
+      document.getElementById('filter-min-comp').value = 0;
+      document.getElementById('min-comp-value').textContent = '0';
+      document.getElementById('filter-bookmarked').checked = false;
+      document.getElementById('filter-passed').checked = false;
+      document.getElementById('filter-evaluated').checked = false;
+      currentPage = 1;
+      loadPosts();
     }
 
     // View switching
