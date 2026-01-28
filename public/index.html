@@ -244,6 +244,8 @@
         const data = await res.json();
 
         const statusEl = document.getElementById('filter-status');
+        const filterBtn = document.getElementById('filter-btn');
+        
         if (data.isConfigured) {
           statusEl.innerHTML = `
             <span class="inline-flex items-center">
@@ -252,10 +254,24 @@
               ${data.pending > 0 ? `&bull; <span class="text-orange-500">${data.pending} pending</span>` : ''}
             </span>
           `;
+          
+          // Disable button if filter is already running
+          if (data.isRunning) {
+            filterBtn.disabled = true;
+            filterBtn.textContent = 'Filtering...';
+            filterBtn.classList.add('opacity-50', 'cursor-not-allowed');
+          } else {
+            filterBtn.disabled = false;
+            filterBtn.textContent = 'Filter Now';
+            filterBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+          }
         } else {
           statusEl.innerHTML = `
             <span class="text-orange-500">AI filter not configured (GEMINI_API_KEY missing)</span>
           `;
+          // Disable button if not configured
+          filterBtn.disabled = true;
+          filterBtn.classList.add('opacity-50', 'cursor-not-allowed');
         }
       } catch (err) {
         console.error('Failed to load filter status:', err);
@@ -594,6 +610,9 @@
     loadPosts();
     loadSubreddits();
     loadFilterStatus();
+    
+    // Poll filter status every 5 seconds to keep UI in sync
+    setInterval(loadFilterStatus, 5000);
   </script>
 </body>
 </html>
