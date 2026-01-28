@@ -33,8 +33,17 @@ model Post {
   isFlagged   Boolean   @default(false) @map("is_flagged")
   subreddit   Subreddit @relation(fields: [subredditId], references: [id], onDelete: Cascade)
 
+  // Opportunity filtering
+  isEvaluated       Boolean   @default(false) @map("is_evaluated")
+  isOpportunity     Boolean?  @map("is_opportunity")
+  opportunityScore  Int?      @map("opportunity_score")
+  opportunityReason String?   @map("opportunity_reason")
+  evaluatedAt       DateTime? @map("evaluated_at")
+
   @@index([subredditId])
   @@index([createdUtc])
   @@index([isFlagged])
+  @@index([isEvaluated])
+  @@index([isOpportunity])
   @@map("posts")
 }

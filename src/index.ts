@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import subredditRoutes from "./routes/subreddits.js";
 import postRoutes from "./routes/posts.js";
 import systemRoutes from "./routes/system.js";
+import filterRoutes from "./routes/filter.js";
 import { startCollector } from "./collector.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -22,6 +23,7 @@ app.use(express.static(path.join(__dirname, "../public")));
 // API routes
 app.use("/api/subreddits", subredditRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/filter", filterRoutes);
 app.use("/api", systemRoutes);
 
 // Serve index.html for root

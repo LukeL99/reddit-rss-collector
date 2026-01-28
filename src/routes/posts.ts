@@ -13,6 +13,9 @@ router.get("/", async (req, res) => {
       minScore,
       flagged,
       since,
+      evaluated,
+      opportunity,
+      minOpportunityScore,
       limit = "50",
       offset = "0",
     } = req.query;
@@ -60,6 +63,28 @@ router.get("/", async (req, res) => {
       }
     }
 
+    // Filter by evaluation status
+    if (evaluated === "true") {
+      where.isEvaluated = true;
+    } else if (evaluated === "false") {
+      where.isEvaluated = false;
+    }
+
+    // Filter by opportunity status
+    if (opportunity === "true") {
+      where.isOpportunity = true;
+    } else if (opportunity === "false") {
+      where.isOpportunity = false;
+    }
+
+    // Minimum opportunity score filter
+    if (minOpportunityScore && typeof minOpportunityScore === "string") {
+      const score = parseInt(minOpportunityScore, 10);
+      if (!isNaN(score)) {
+        where.opportunityScore = { gte: score };
+      }
+    }
+
     const take = Math.min(parseInt(limit as string, 10) || 50, 100);
     const skip = parseInt(offset as string, 10) || 0;
 
@@ -92,6 +117,10 @@ router.get("/", async (req, res) => {
         createdUtc: p.createdUtc,
         fetchedAt: p.fetchedAt,
         isFlagged: p.isFlagged,
+        isEvaluated: p.isEvaluated,
+        isOpportunity: p.isOpportunity,
+        opportunityScore: p.opportunityScore,
+        opportunityReason: p.opportunityReason,
       })),
       total,
       limit: take,
@@ -136,6 +165,10 @@ router.patch("/:id", async (req, res) => {
       createdUtc: post.createdUtc,
       fetchedAt: post.fetchedAt,
       isFlagged: post.isFlagged,
+      isEvaluated: post.isEvaluated,
+      isOpportunity: post.isOpportunity,
+      opportunityScore: post.opportunityScore,
+      opportunityReason: post.opportunityReason,
     });
   } catch (err) {
     console.error("Error updating post:", err);
