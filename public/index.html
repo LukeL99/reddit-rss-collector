@@ -321,6 +321,7 @@
                       </div>
                       <div class="text-sm text-dark-muted mt-1">
                         <span class="text-blue-400">r/${post.subreddit}</span> · ${post.author} · ${timeAgo(post.createdUtc)} · ${post.score} pts · ${post.numComments} comments
+                        · <code class="text-xs bg-dark-bg px-1 py-0.5 rounded cursor-pointer hover:text-white" onclick="navigator.clipboard.writeText('${post.id}'); event.stopPropagation();" title="Click to copy ID">${post.id.substring(0, 8)}…</code>
                       </div>
                     </div>
                     <button onclick="toggleBookmark('${post.id}', event)" class="p-2 hover:bg-dark-border rounded ${post.isFlagged ? 'text-yellow-500' : 'text-dark-muted hover:text-yellow-500'}">
