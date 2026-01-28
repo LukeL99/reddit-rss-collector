@@ -1,16 +1,36 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { Post } from "@prisma/client";
 import { prisma } from "./lib/db.js";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const FILTER_BATCH_SIZE = parseInt(process.env.FILTER_BATCH_SIZE || "50", 10);
-const FILTER_MODEL = process.env.FILTER_MODEL || "gemini-2.0-flash";
+const FILTER_MODEL = process.env.FILTER_MODEL || "gemini-3-flash-preview";
 
 export interface FilterResult {
   isOpportunity: boolean;
   score: number;
   reason: string;
 }
+
+// Structured output schema for Gemini 3
+const filterResultSchema = {
+  type: SchemaType.OBJECT as const,
+  properties: {
+    isOpportunity: {
+      type: SchemaType.BOOLEAN as const,
+      description: "Whether this post represents a genuine business opportunity",
+    },
+    score: {
+      type: SchemaType.INTEGER as const,
+      description: "Opportunity score from 0-10, where 7+ indicates a clear, buildable, validated pain point",
+    },
+    reason: {
+      type: SchemaType.STRING as const,
+      description: "Brief 1-2 sentence explanation of the evaluation",
+    },
+  },
+  required: ["isOpportunity", "score", "reason"],
+};
 
 const PROMPT_TEMPLATE = `You are evaluating Reddit posts for business opportunity potential.
 
@@ -19,13 +39,6 @@ POST BODY: {body}
 SUBREDDIT: r/{subreddit}
 UPVOTES: {score}
 COMMENTS: {numComments}
-
-Evaluate this post and respond with JSON only:
-{
-  "isOpportunity": boolean,
-  "score": number (0-10),
-  "reason": "Brief 1-2 sentence explanation"
-}
 
 Scoring criteria:
 - Is this a real problem someone would pay to solve?
@@ -52,7 +65,13 @@ export async function evaluatePost(
   }
 
   const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-  const model = genAI.getGenerativeModel({ model: FILTER_MODEL });
+  const model = genAI.getGenerativeModel({
+    model: FILTER_MODEL,
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: filterResultSchema,
+    },
+  });
 
   const prompt = buildPrompt(post);
 
@@ -61,20 +80,10 @@ export async function evaluatePost(
     const response = result.response;
     const text = response.text();
 
-    // Extract JSON from response (handle markdown code blocks)
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      console.error("Failed to parse Gemini response:", text);
-      return {
-        isOpportunity: false,
-        score: 0,
-        reason: "Failed to parse AI response",
-      };
-    }
+    // With structured output, response is guaranteed valid JSON
+    const parsed = JSON.parse(text) as FilterResult;
 
-    const parsed = JSON.parse(jsonMatch[0]) as FilterResult;
-
-    // Validate and normalize
+    // Normalize score to 0-10 range
     return {
       isOpportunity: Boolean(parsed.isOpportunity),
       score: Math.max(0, Math.min(10, Math.round(parsed.score))),
