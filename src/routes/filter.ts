@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { filterNewPosts, getFilterStatus } from "../filter.js";
+import { filterNewPosts, getFilterStatus, requestStop } from "../filter.js";
 
 const router = Router();
 
@@ -54,6 +54,22 @@ router.get("/status", async (_req, res) => {
     console.error("Error getting filter status:", error);
     res.status(500).json({ error: "Failed to get filter status" });
   }
+});
+
+// POST /api/filter/stop - Stop running filter
+router.post("/stop", (_req, res) => {
+  if (!isFiltering) {
+    return res.status(400).json({
+      error: "No filter job is running",
+      success: false,
+    });
+  }
+
+  requestStop();
+  res.json({
+    success: true,
+    message: "Stop requested, filter will halt after current post",
+  });
 });
 
 export default router;

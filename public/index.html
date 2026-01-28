@@ -120,6 +120,14 @@
               Filter Now
             </button>
             <button
+              onclick="stopFilter()"
+              id="stop-filter-btn"
+              title="Stop the currently running filter job"
+              class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 hidden"
+            >
+              Stop Filter
+            </button>
+            <button
               onclick="triggerCollect()"
               id="collect-btn"
               title="Manually trigger an RSS fetch from all enabled subreddits. Normally runs automatically every 30 minutes."
@@ -245,6 +253,7 @@
 
         const statusEl = document.getElementById('filter-status');
         const filterBtn = document.getElementById('filter-btn');
+        const stopBtn = document.getElementById('stop-filter-btn');
         
         if (data.isConfigured) {
           statusEl.innerHTML = `
@@ -255,23 +264,24 @@
             </span>
           `;
           
-          // Disable button if filter is already running
+          // Toggle buttons based on running state
           if (data.isRunning) {
-            filterBtn.disabled = true;
-            filterBtn.textContent = 'Filtering...';
-            filterBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            filterBtn.classList.add('hidden');
+            stopBtn.classList.remove('hidden');
           } else {
+            filterBtn.classList.remove('hidden');
             filterBtn.disabled = false;
             filterBtn.textContent = 'Filter Now';
-            filterBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            stopBtn.classList.add('hidden');
           }
         } else {
           statusEl.innerHTML = `
             <span class="text-orange-500">AI filter not configured (GEMINI_API_KEY missing)</span>
           `;
-          // Disable button if not configured
+          // Hide both buttons if not configured
           filterBtn.disabled = true;
           filterBtn.classList.add('opacity-50', 'cursor-not-allowed');
+          stopBtn.classList.add('hidden');
         }
       } catch (err) {
         console.error('Failed to load filter status:', err);
@@ -280,18 +290,23 @@
 
     // Trigger filter
     async function triggerFilter() {
-      const btn = document.getElementById('filter-btn');
-      btn.disabled = true;
-      btn.textContent = 'Filtering...';
+      const filterBtn = document.getElementById('filter-btn');
+      const stopBtn = document.getElementById('stop-filter-btn');
+      
+      // Swap buttons immediately
+      filterBtn.classList.add('hidden');
+      stopBtn.classList.remove('hidden');
 
       try {
         const res = await fetch('/api/filter', { method: 'POST' });
         const data = await res.json();
 
         if (data.success) {
-          alert(`Filter complete! Evaluated ${data.evaluated} posts, found ${data.opportunities} opportunities.`);
+          const msg = data.stopped 
+            ? `Filter stopped. Evaluated ${data.evaluated} posts, found ${data.opportunities} opportunities.`
+            : `Filter complete! Evaluated ${data.evaluated} posts, found ${data.opportunities} opportunities.`;
+          alert(msg);
           loadPosts();
-          loadFilterStatus();
         } else {
           alert('Filter failed: ' + (data.error || 'Unknown error'));
         }
@@ -299,8 +314,29 @@
         console.error('Failed to trigger filter:', err);
         alert('Failed to trigger filter');
       } finally {
-        btn.disabled = false;
-        btn.textContent = 'Filter Now';
+        loadFilterStatus();
+      }
+    }
+
+    // Stop filter
+    async function stopFilter() {
+      const stopBtn = document.getElementById('stop-filter-btn');
+      stopBtn.disabled = true;
+      stopBtn.textContent = 'Stopping...';
+
+      try {
+        const res = await fetch('/api/filter/stop', { method: 'POST' });
+        const data = await res.json();
+
+        if (!data.success) {
+          alert('Failed to stop: ' + (data.error || 'Unknown error'));
+        }
+      } catch (err) {
+        console.error('Failed to stop filter:', err);
+        alert('Failed to stop filter');
+      } finally {
+        stopBtn.disabled = false;
+        stopBtn.textContent = 'Stop Filter';
       }
     }
 

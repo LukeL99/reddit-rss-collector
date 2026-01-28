@@ -6,6 +6,17 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const FILTER_BATCH_SIZE = parseInt(process.env.FILTER_BATCH_SIZE || "50", 10);
 const FILTER_MODEL = process.env.FILTER_MODEL || "gemini-3-flash-preview";
 
+// Stop signal for cancellation
+let stopRequested = false;
+
+export function requestStop(): void {
+  stopRequested = true;
+}
+
+export function isStopRequested(): boolean {
+  return stopRequested;
+}
+
 export interface FilterResult {
   isOpportunity: boolean;
   score: number;
@@ -98,66 +109,84 @@ export async function evaluatePost(
 export async function filterNewPosts(): Promise<{
   evaluated: number;
   opportunities: number;
+  stopped: boolean;
 }> {
   if (!GEMINI_API_KEY) {
     throw new Error("GEMINI_API_KEY environment variable is not set");
   }
 
-  // Get unevaluated posts
-  const posts = await prisma.post.findMany({
-    where: { isEvaluated: false },
-    include: { subreddit: { select: { name: true } } },
-    take: FILTER_BATCH_SIZE,
-    orderBy: { createdUtc: "desc" },
-  });
+  // Reset stop signal at start
+  stopRequested = false;
 
   let evaluated = 0;
   let opportunities = 0;
 
-  for (const post of posts) {
-    try {
-      const result = await evaluatePost(post);
+  // Process all pending posts in batches until done or stopped
+  while (!stopRequested) {
+    // Get next batch of unevaluated posts
+    const posts = await prisma.post.findMany({
+      where: { isEvaluated: false },
+      include: { subreddit: { select: { name: true } } },
+      take: FILTER_BATCH_SIZE,
+      orderBy: { createdUtc: "desc" },
+    });
 
-      await prisma.post.update({
-        where: { id: post.id },
-        data: {
-          isEvaluated: true,
-          isOpportunity: result.isOpportunity,
-          opportunityScore: result.score,
-          opportunityReason: result.reason,
-          evaluatedAt: new Date(),
-        },
-      });
+    // No more posts to process
+    if (posts.length === 0) {
+      break;
+    }
 
-      evaluated++;
-      if (result.isOpportunity) {
-        opportunities++;
+    for (const post of posts) {
+      // Check stop signal before each post
+      if (stopRequested) {
+        console.log("[Filter] Stop requested, halting...");
+        break;
       }
 
-      console.log(
-        `Evaluated: "${post.title.substring(0, 50)}..." - Score: ${result.score}, Opportunity: ${result.isOpportunity}`
-      );
+      try {
+        const result = await evaluatePost(post);
 
-      // Small delay to respect rate limits
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    } catch (error) {
-      console.error(`Failed to evaluate post ${post.id}:`, error);
-      // Mark as evaluated to avoid infinite retry loop, but with null values
-      await prisma.post.update({
-        where: { id: post.id },
-        data: {
-          isEvaluated: true,
-          isOpportunity: null,
-          opportunityScore: null,
-          opportunityReason: "Evaluation failed",
-          evaluatedAt: new Date(),
-        },
-      });
-      evaluated++;
+        await prisma.post.update({
+          where: { id: post.id },
+          data: {
+            isEvaluated: true,
+            isOpportunity: result.isOpportunity,
+            opportunityScore: result.score,
+            opportunityReason: result.reason,
+            evaluatedAt: new Date(),
+          },
+        });
+
+        evaluated++;
+        if (result.isOpportunity) {
+          opportunities++;
+        }
+
+        console.log(
+          `Evaluated: "${post.title.substring(0, 50)}..." - Score: ${result.score}, Opportunity: ${result.isOpportunity}`
+        );
+
+        // Small delay to respect rate limits
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      } catch (error) {
+        console.error(`Failed to evaluate post ${post.id}:`, error);
+        // Mark as evaluated to avoid infinite retry loop, but with null values
+        await prisma.post.update({
+          where: { id: post.id },
+          data: {
+            isEvaluated: true,
+            isOpportunity: null,
+            opportunityScore: null,
+            opportunityReason: "Evaluation failed",
+            evaluatedAt: new Date(),
+          },
+        });
+        evaluated++;
+      }
     }
   }
 
-  return { evaluated, opportunities };
+  return { evaluated, opportunities, stopped: stopRequested };
 }
 
 export async function getFilterStatus(): Promise<{
