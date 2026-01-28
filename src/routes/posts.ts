@@ -18,6 +18,11 @@ router.get("/", async (req, res) => {
       minTriageScore,
       evaluated,
       triagedAfter,
+      minTotalScore,
+      minMarketSize,
+      minWtp,
+      minEase,
+      minCompetition,
       limit = "50",
       offset = "0",
     } = req.query;
@@ -99,6 +104,38 @@ router.get("/", async (req, res) => {
       const afterDate = new Date(triagedAfter);
       if (!isNaN(afterDate.getTime())) {
         where.triagedAt = { gte: afterDate };
+      }
+    }
+
+    // Evaluation score filters
+    if (minTotalScore && typeof minTotalScore === "string") {
+      const score = parseInt(minTotalScore, 10);
+      if (!isNaN(score)) {
+        where.totalScore = { gte: score };
+      }
+    }
+    if (minMarketSize && typeof minMarketSize === "string") {
+      const score = parseInt(minMarketSize, 10);
+      if (!isNaN(score)) {
+        where.marketSizeScore = { gte: score };
+      }
+    }
+    if (minWtp && typeof minWtp === "string") {
+      const score = parseInt(minWtp, 10);
+      if (!isNaN(score)) {
+        where.wtpScore = { gte: score };
+      }
+    }
+    if (minEase && typeof minEase === "string") {
+      const score = parseInt(minEase, 10);
+      if (!isNaN(score)) {
+        where.easeScore = { gte: score };
+      }
+    }
+    if (minCompetition && typeof minCompetition === "string") {
+      const score = parseInt(minCompetition, 10);
+      if (!isNaN(score)) {
+        where.competitionScore = { gte: score };
       }
     }
 

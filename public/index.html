@@ -31,8 +31,8 @@
   <div id="app" class="container mx-auto px-4 py-8 max-w-6xl">
     <!-- Header -->
     <header class="mb-8">
-      <h1 class="text-3xl font-bold text-white">Reddit RSS Collector</h1>
-      <p class="text-dark-muted">Collect and browse Reddit posts from your favorite subreddits</p>
+      <h1 class="text-3xl font-bold text-white">Opportunity Radar 📡</h1>
+      <p class="text-dark-muted">Finding the problems worth solving so you don't have to doomscroll</p>
     </header>
 
     <!-- Navigation Tabs -->
@@ -64,10 +64,36 @@
             <input type="range" id="filter-min-upvotes" min="0" max="100" value="0" class="w-full accent-blue-500">
           </div>
           <div>
-            <label class="block text-sm font-medium text-dark-muted mb-1">Min Triage Score: <span id="min-triage-value">0</span></label>
+            <label class="block text-sm font-medium text-dark-muted mb-1">Min Triage: <span id="min-triage-value">0</span></label>
             <input type="range" id="filter-min-triage" min="0" max="10" value="0" class="w-full accent-blue-500">
           </div>
         </div>
+        
+        <!-- Evaluation Filters -->
+        <div class="mt-4 grid grid-cols-2 md:grid-cols-5 gap-4 p-3 bg-dark-bg rounded-lg border border-dark-border">
+          <div class="col-span-2 md:col-span-5 text-xs font-medium text-purple-400 uppercase tracking-wide">Glitch's Evaluation Filters</div>
+          <div>
+            <label class="block text-xs text-dark-muted mb-1">Min Total: <span id="min-total-value">0</span></label>
+            <input type="range" id="filter-min-total" min="0" max="40" value="0" class="w-full accent-purple-500">
+          </div>
+          <div>
+            <label class="block text-xs text-dark-muted mb-1">Min Market: <span id="min-market-value">0</span></label>
+            <input type="range" id="filter-min-market" min="0" max="10" value="0" class="w-full accent-purple-500">
+          </div>
+          <div>
+            <label class="block text-xs text-dark-muted mb-1">Min WTP: <span id="min-wtp-value">0</span></label>
+            <input type="range" id="filter-min-wtp" min="0" max="10" value="0" class="w-full accent-purple-500">
+          </div>
+          <div>
+            <label class="block text-xs text-dark-muted mb-1">Min Ease: <span id="min-ease-value">0</span></label>
+            <input type="range" id="filter-min-ease" min="0" max="10" value="0" class="w-full accent-purple-500">
+          </div>
+          <div>
+            <label class="block text-xs text-dark-muted mb-1">Min Competition: <span id="min-comp-value">0</span></label>
+            <input type="range" id="filter-min-comp" min="0" max="10" value="0" class="w-full accent-purple-500">
+          </div>
+        </div>
+        
         <div class="mt-4 flex flex-wrap items-center gap-4">
           <label class="flex items-center space-x-2 cursor-pointer">
             <input type="checkbox" id="filter-bookmarked" class="w-4 h-4 rounded bg-dark-bg border-dark-border text-yellow-500 focus:ring-yellow-500">
@@ -284,6 +310,13 @@
       const bookmarked = document.getElementById('filter-bookmarked').checked;
       const passed = document.getElementById('filter-passed').checked;
       const evaluated = document.getElementById('filter-evaluated').checked;
+      
+      // Evaluation filters
+      const minTotal = document.getElementById('filter-min-total').value;
+      const minMarket = document.getElementById('filter-min-market').value;
+      const minWtp = document.getElementById('filter-min-wtp').value;
+      const minEase = document.getElementById('filter-min-ease').value;
+      const minComp = document.getElementById('filter-min-comp').value;
 
       const params = new URLSearchParams();
       if (search) params.append('search', search);
@@ -293,6 +326,11 @@
       if (bookmarked) params.append('flagged', 'true');
       if (passed) params.append('passedTriage', 'true');
       if (evaluated) params.append('evaluated', 'true');
+      if (minTotal > 0) params.append('minTotalScore', minTotal);
+      if (minMarket > 0) params.append('minMarketSize', minMarket);
+      if (minWtp > 0) params.append('minWtp', minWtp);
+      if (minEase > 0) params.append('minEase', minEase);
+      if (minComp > 0) params.append('minCompetition', minComp);
       params.append('limit', pageSize);
       params.append('offset', (currentPage - 1) * pageSize);
 
@@ -503,6 +541,26 @@
     });
     document.getElementById('filter-min-triage').addEventListener('input', (e) => {
       document.getElementById('min-triage-value').textContent = e.target.value;
+      debouncedLoadPosts();
+    });
+    document.getElementById('filter-min-total').addEventListener('input', (e) => {
+      document.getElementById('min-total-value').textContent = e.target.value;
+      debouncedLoadPosts();
+    });
+    document.getElementById('filter-min-market').addEventListener('input', (e) => {
+      document.getElementById('min-market-value').textContent = e.target.value;
+      debouncedLoadPosts();
+    });
+    document.getElementById('filter-min-wtp').addEventListener('input', (e) => {
+      document.getElementById('min-wtp-value').textContent = e.target.value;
+      debouncedLoadPosts();
+    });
+    document.getElementById('filter-min-ease').addEventListener('input', (e) => {
+      document.getElementById('min-ease-value').textContent = e.target.value;
+      debouncedLoadPosts();
+    });
+    document.getElementById('filter-min-comp').addEventListener('input', (e) => {
+      document.getElementById('min-comp-value').textContent = e.target.value;
       debouncedLoadPosts();
     });
     document.getElementById('filter-bookmarked').addEventListener('change', debouncedLoadPosts);
