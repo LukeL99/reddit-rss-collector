@@ -161,7 +161,7 @@
 
     // Evaluation badge
     function renderEvalBadge(post) {
-      if (!post.isEvaluated || post.totalScore === null) return '';
+      if (post.totalScore === null) return '';
       return `<span class="px-2 py-0.5 text-xs font-medium rounded bg-purple-600 text-white">Eval: ${post.totalScore}/40</span>`;
     }
 
@@ -351,7 +351,7 @@
                       <!-- Evaluation Info -->
                       <div class="bg-dark-bg rounded-lg p-3 border border-dark-border">
                         <h4 class="text-sm font-medium text-dark-muted mb-2">Evaluation (Glitch)</h4>
-                        ${post.isEvaluated ? `
+                        ${post.totalScore !== null ? `
                           <div class="space-y-1 text-sm">
                             <div class="flex justify-between"><span class="text-dark-muted">Market Size:</span><span class="text-white">${post.marketSizeScore}/10</span></div>
                             <div class="flex justify-between"><span class="text-dark-muted">WTP:</span><span class="text-white">${post.wtpScore}/10</span></div>
