@@ -1,0 +1,30 @@
+services:
+  app:
+    image: ${ECR_REPO:-reddit-rss-collector}:${TAG:-latest}
+    ports:
+      - "8420:3000"
+    environment:
+      - DATABASE_URL=postgresql://reddit:reddit@db:5432/reddit
+      - COLLECT_INTERVAL_MINUTES=30
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=reddit
+      - POSTGRES_PASSWORD=reddit
+      - POSTGRES_DB=reddit
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reddit -d reddit"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

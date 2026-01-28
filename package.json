@@ -1,0 +1,31 @@
+{
+  "name": "reddit-rss-collector",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A self-hosted service that collects posts from Reddit subreddits via RSS feeds",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts"
+  },
+  "keywords": ["reddit", "rss", "collector"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "express": "^4.21.1",
+    "rss-parser": "^3.13.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.9.0",
+    "prisma": "^5.22.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}

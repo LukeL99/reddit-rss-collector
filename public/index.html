@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reddit RSS Collector</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    [x-cloak] { display: none !important; }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <div id="app" class="container mx-auto px-4 py-8 max-w-6xl">
+    <!-- Header -->
+    <header class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-800">Reddit RSS Collector</h1>
+      <p class="text-gray-600">Collect and browse Reddit posts from your favorite subreddits</p>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="mb-6 border-b border-gray-200">
+      <nav class="flex space-x-4">
+        <button
+          onclick="showView('posts')"
+          id="tab-posts"
+          class="tab-btn px-4 py-2 font-medium text-blue-600 border-b-2 border-blue-600"
+        >
+          Posts
+        </button>
+        <button
+          onclick="showView('subreddits')"
+          id="tab-subreddits"
+          class="tab-btn px-4 py-2 font-medium text-gray-500 hover:text-gray-700"
+        >
+          Subreddits
+        </button>
+      </nav>
+    </div>
+
+    <!-- Posts View -->
+    <div id="view-posts">
+      <!-- Filters -->
+      <div class="bg-white rounded-lg shadow p-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+            <input
+              type="text"
+              id="filter-search"
+              placeholder="Search title/body..."
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Subreddit</label>
+            <select
+              id="filter-subreddit"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Subreddits</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Min Score: <span id="min-score-value">0</span></label>
+            <input
+              type="range"
+              id="filter-min-score"
+              min="0"
+              max="100"
+              value="0"
+              class="w-full"
+            >
+          </div>
+          <div class="flex items-end">
+            <label class="flex items-center space-x-2 cursor-pointer">
+              <input type="checkbox" id="filter-flagged" class="w-4 h-4 text-blue-600 rounded">
+              <span class="text-sm font-medium text-gray-700">Flagged only</span>
+            </label>
+          </div>
+        </div>
+        <div class="mt-4 flex justify-between items-center">
+          <button
+            onclick="loadPosts()"
+            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Apply Filters
+          </button>
+          <button
+            onclick="triggerCollect()"
+            id="collect-btn"
+            class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+          >
+            Collect Now
+          </button>
+        </div>
+      </div>
+
+      <!-- Posts List -->
+      <div id="posts-container" class="space-y-4">
+        <p class="text-gray-500 text-center py-8">Loading posts...</p>
+      </div>
+
+      <!-- Pagination -->
+      <div id="pagination" class="mt-6 flex justify-center space-x-2 hidden">
+        <button
+          onclick="prevPage()"
+          id="prev-btn"
+          class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <span id="page-info" class="px-4 py-2 text-gray-600"></span>
+        <button
+          onclick="nextPage()"
+          id="next-btn"
+          class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+
+    <!-- Subreddits View -->
+    <div id="view-subreddits" class="hidden">
+      <!-- Add Subreddit -->
+      <div class="bg-white rounded-lg shadow p-4 mb-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-3">Add Subreddit</h2>
+        <div class="flex space-x-4">
+          <input
+            type="text"
+            id="new-subreddit"
+            placeholder="e.g., SomebodyMakeThis"
+            class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+          <button
+            onclick="addSubreddit()"
+            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Add
+          </button>
+        </div>
+      </div>
+
+      <!-- Subreddits List -->
+      <div id="subreddits-container" class="space-y-3">
+        <p class="text-gray-500 text-center py-8">Loading subreddits...</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // State
+    let currentView = 'posts';
+    let posts = [];
+    let subreddits = [];
+    let currentOffset = 0;
+    let totalPosts = 0;
+    const limit = 50;
+
+    // View switching
+    function showView(view) {
+      currentView = view;
+      document.getElementById('view-posts').classList.toggle('hidden', view !== 'posts');
+      document.getElementById('view-subreddits').classList.toggle('hidden', view !== 'subreddits');
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+        btn.classList.add('text-gray-500');
+      });
+
+      const activeTab = document.getElementById(`tab-${view}`);
+      activeTab.classList.remove('text-gray-500');
+      activeTab.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+
+      if (view === 'subreddits') {
+        loadSubreddits();
+      }
+    }
+
+    // Format relative time
+    function timeAgo(date) {
+      const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+      const intervals = [
+        { label: 'y', seconds: 31536000 },
+        { label: 'mo', seconds: 2592000 },
+        { label: 'd', seconds: 86400 },
+        { label: 'h', seconds: 3600 },
+        { label: 'm', seconds: 60 },
+      ];
+      for (const interval of intervals) {
+        const count = Math.floor(seconds / interval.seconds);
+        if (count >= 1) return `${count}${interval.label} ago`;
+      }
+      return 'just now';
+    }
+
+    // Load posts
+    async function loadPosts() {
+      const search = document.getElementById('filter-search').value;
+      const subreddit = document.getElementById('filter-subreddit').value;
+      const minScore = document.getElementById('filter-min-score').value;
+      const flagged = document.getElementById('filter-flagged').checked;
+
+      const params = new URLSearchParams();
+      if (search) params.set('search', search);
+      if (subreddit) params.set('subreddit', subreddit);
+      if (minScore > 0) params.set('minScore', minScore);
+      if (flagged) params.set('flagged', 'true');
+      params.set('limit', limit);
+      params.set('offset', currentOffset);
+
+      try {
+        const res = await fetch(`/api/posts?${params}`);
+        const data = await res.json();
+        posts = data.posts;
+        totalPosts = data.total;
+        renderPosts();
+      } catch (err) {
+        console.error('Failed to load posts:', err);
+        document.getElementById('posts-container').innerHTML =
+          '<p class="text-red-500 text-center py-8">Failed to load posts</p>';
+      }
+    }
+
+    // Render posts
+    function renderPosts() {
+      const container = document.getElementById('posts-container');
+
+      if (posts.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-center py-8">No posts found</p>';
+        document.getElementById('pagination').classList.add('hidden');
+        return;
+      }
+
+      container.innerHTML = posts.map(post => `
+        <div class="bg-white rounded-lg shadow p-4 ${post.isFlagged ? 'border-l-4 border-yellow-500' : ''}">
+          <div class="flex justify-between items-start">
+            <div class="flex-1">
+              <a
+                href="${post.url}"
+                target="_blank"
+                class="text-lg font-medium text-blue-600 hover:underline"
+              >
+                ${escapeHtml(post.title)}
+              </a>
+              <div class="mt-1 text-sm text-gray-500">
+                <span class="font-medium text-gray-700">r/${post.subreddit}</span>
+                &bull; ${post.author}
+                &bull; ${timeAgo(post.createdUtc)}
+                &bull; ${post.score} points
+                &bull; ${post.numComments} comments
+              </div>
+              ${post.body ? `<p class="mt-2 text-gray-600 text-sm line-clamp-2">${escapeHtml(post.body.substring(0, 200))}${post.body.length > 200 ? '...' : ''}</p>` : ''}
+            </div>
+            <button
+              onclick="toggleFlag('${post.id}', ${!post.isFlagged})"
+              class="ml-4 p-2 rounded-full ${post.isFlagged ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100 text-gray-400'} hover:bg-yellow-200"
+              title="${post.isFlagged ? 'Unflag' : 'Flag'}"
+            >
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      // Update pagination
+      const pagination = document.getElementById('pagination');
+      pagination.classList.remove('hidden');
+      document.getElementById('page-info').textContent =
+        `${currentOffset + 1}-${Math.min(currentOffset + limit, totalPosts)} of ${totalPosts}`;
+      document.getElementById('prev-btn').disabled = currentOffset === 0;
+      document.getElementById('next-btn').disabled = currentOffset + limit >= totalPosts;
+    }
+
+    // Toggle flag
+    async function toggleFlag(postId, flagged) {
+      try {
+        await fetch(`/api/posts/${postId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isFlagged: flagged })
+        });
+        loadPosts();
+      } catch (err) {
+        console.error('Failed to toggle flag:', err);
+      }
+    }
+
+    // Pagination
+    function prevPage() {
+      if (currentOffset > 0) {
+        currentOffset = Math.max(0, currentOffset - limit);
+        loadPosts();
+      }
+    }
+
+    function nextPage() {
+      if (currentOffset + limit < totalPosts) {
+        currentOffset += limit;
+        loadPosts();
+      }
+    }
+
+    // Load subreddits
+    async function loadSubreddits() {
+      try {
+        const res = await fetch('/api/subreddits');
+        subreddits = await res.json();
+        renderSubreddits();
+        updateSubredditFilter();
+      } catch (err) {
+        console.error('Failed to load subreddits:', err);
+        document.getElementById('subreddits-container').innerHTML =
+          '<p class="text-red-500 text-center py-8">Failed to load subreddits</p>';
+      }
+    }
+
+    // Render subreddits
+    function renderSubreddits() {
+      const container = document.getElementById('subreddits-container');
+
+      if (subreddits.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-center py-8">No subreddits configured</p>';
+        return;
+      }
+
+      container.innerHTML = subreddits.map(sub => `
+        <div class="bg-white rounded-lg shadow p-4 flex items-center justify-between">
+          <div>
+            <span class="font-medium text-gray-800">r/${sub.name}</span>
+            <span class="ml-2 text-sm text-gray-500">${sub.postCount} posts</span>
+            ${sub.lastFetchedAt ? `<span class="ml-2 text-sm text-gray-400">Last fetched: ${timeAgo(sub.lastFetchedAt)}</span>` : ''}
+          </div>
+          <div class="flex items-center space-x-3">
+            <label class="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                ${sub.enabled ? 'checked' : ''}
+                onchange="toggleSubreddit('${sub.id}', this.checked)"
+                class="w-4 h-4 text-blue-600 rounded"
+              >
+              <span class="ml-2 text-sm text-gray-600">Enabled</span>
+            </label>
+            <button
+              onclick="deleteSubreddit('${sub.id}', '${sub.name}')"
+              class="p-2 text-red-500 hover:bg-red-100 rounded"
+              title="Delete"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Update subreddit filter dropdown
+    function updateSubredditFilter() {
+      const select = document.getElementById('filter-subreddit');
+      const currentValue = select.value;
+      select.innerHTML = '<option value="">All Subreddits</option>' +
+        subreddits.map(sub => `<option value="${sub.name}">${sub.name}</option>`).join('');
+      select.value = currentValue;
+    }
+
+    // Add subreddit
+    async function addSubreddit() {
+      const input = document.getElementById('new-subreddit');
+      const name = input.value.trim();
+
+      if (!name) return;
+
+      try {
+        const res = await fetch('/api/subreddits', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        });
+
+        if (res.ok) {
+          input.value = '';
+          loadSubreddits();
+        } else {
+          const data = await res.json();
+          alert(data.error || 'Failed to add subreddit');
+        }
+      } catch (err) {
+        console.error('Failed to add subreddit:', err);
+        alert('Failed to add subreddit');
+      }
+    }
+
+    // Toggle subreddit enabled
+    async function toggleSubreddit(id, enabled) {
+      try {
+        await fetch(`/api/subreddits/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled })
+        });
+        loadSubreddits();
+      } catch (err) {
+        console.error('Failed to toggle subreddit:', err);
+      }
+    }
+
+    // Delete subreddit
+    async function deleteSubreddit(id, name) {
+      if (!confirm(`Delete r/${name} and all its posts?`)) return;
+
+      try {
+        await fetch(`/api/subreddits/${id}`, { method: 'DELETE' });
+        loadSubreddits();
+      } catch (err) {
+        console.error('Failed to delete subreddit:', err);
+        alert('Failed to delete subreddit');
+      }
+    }
+
+    // Trigger collection
+    async function triggerCollect() {
+      const btn = document.getElementById('collect-btn');
+      btn.disabled = true;
+      btn.textContent = 'Collecting...';
+
+      try {
+        const res = await fetch('/api/collect', { method: 'POST' });
+        const data = await res.json();
+
+        if (data.success) {
+          alert(`Collection complete! Fetched ${data.totalFetched} posts, ${data.totalNew} new.`);
+          loadPosts();
+          loadSubreddits();
+        } else {
+          alert('Collection failed: ' + (data.error || 'Unknown error'));
+        }
+      } catch (err) {
+        console.error('Failed to trigger collection:', err);
+        alert('Failed to trigger collection');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Collect Now';
+      }
+    }
+
+    // Escape HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Event listeners
+    document.getElementById('filter-min-score').addEventListener('input', (e) => {
+      document.getElementById('min-score-value').textContent = e.target.value;
+    });
+
+    document.getElementById('filter-search').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') loadPosts();
+    });
+
+    document.getElementById('new-subreddit').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') addSubreddit();
+    });
+
+    // Initial load
+    loadPosts();
+    loadSubreddits();
+  </script>
+</body>
+</html>

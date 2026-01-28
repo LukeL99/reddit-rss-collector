@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Subreddit {
+  id            String    @id @default(uuid())
+  name          String    @unique
+  enabled       Boolean   @default(true)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  lastFetchedAt DateTime? @map("last_fetched_at")
+  posts         Post[]
+
+  @@map("subreddits")
+}
+
+model Post {
+  id          String    @id @default(uuid())
+  redditId    String    @unique @map("reddit_id")
+  subredditId String    @map("subreddit_id")
+  title       String
+  body        String?
+  author      String
+  url         String
+  score       Int       @default(0)
+  numComments Int       @default(0) @map("num_comments")
+  createdUtc  DateTime  @map("created_utc")
+  fetchedAt   DateTime  @default(now()) @map("fetched_at")
+  isFlagged   Boolean   @default(false) @map("is_flagged")
+  subreddit   Subreddit @relation(fields: [subredditId], references: [id], onDelete: Cascade)
+
+  @@index([subredditId])
+  @@index([createdUtc])
+  @@index([isFlagged])
+  @@map("posts")
+}
