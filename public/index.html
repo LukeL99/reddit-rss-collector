@@ -5,342 +5,260 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Reddit RSS Collector</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            dark: {
+              bg: '#0f172a',
+              card: '#1e293b',
+              border: '#334155',
+              text: '#e2e8f0',
+              muted: '#94a3b8'
+            }
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    [x-cloak] { display: none !important; }
+    body { background: #0f172a; }
   </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-dark-bg min-h-screen text-dark-text">
   <div id="app" class="container mx-auto px-4 py-8 max-w-6xl">
     <!-- Header -->
     <header class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-800">Reddit RSS Collector</h1>
-      <p class="text-gray-600">Collect and browse Reddit posts from your favorite subreddits</p>
+      <h1 class="text-3xl font-bold text-white">Reddit RSS Collector</h1>
+      <p class="text-dark-muted">Collect and browse Reddit posts from your favorite subreddits</p>
     </header>
 
     <!-- Navigation Tabs -->
-    <div class="mb-6 border-b border-gray-200">
+    <div class="mb-6 border-b border-dark-border">
       <nav class="flex space-x-4">
-        <button
-          onclick="showView('posts')"
-          id="tab-posts"
-          class="tab-btn px-4 py-2 font-medium text-blue-600 border-b-2 border-blue-600"
-        >
-          Posts
-        </button>
-        <button
-          onclick="showView('subreddits')"
-          id="tab-subreddits"
-          class="tab-btn px-4 py-2 font-medium text-gray-500 hover:text-gray-700"
-        >
-          Subreddits
-        </button>
+        <button onclick="showView('posts')" id="tab-posts" class="tab-btn px-4 py-2 font-medium text-blue-400 border-b-2 border-blue-400">Posts</button>
+        <button onclick="showView('subreddits')" id="tab-subreddits" class="tab-btn px-4 py-2 font-medium text-dark-muted hover:text-white">Subreddits</button>
       </nav>
     </div>
 
     <!-- Posts View -->
     <div id="view-posts">
       <!-- Filters -->
-      <div class="bg-white rounded-lg shadow p-4 mb-6">
+      <div class="bg-dark-card rounded-lg shadow-lg p-4 mb-6 border border-dark-border">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div title="Search post titles and body text for keywords">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
-            <input
-              type="text"
-              id="filter-search"
-              placeholder="Search title/body..."
-              title="Search post titles and body text for keywords"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
+          <div>
+            <label class="block text-sm font-medium text-dark-muted mb-1">Search</label>
+            <input type="text" id="filter-search" placeholder="Search title/body..." 
+              class="w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-md text-white placeholder-dark-muted focus:outline-none focus:ring-2 focus:ring-blue-500">
           </div>
-          <div title="Filter to show posts from only one subreddit">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Subreddit</label>
-            <select
-              id="filter-subreddit"
-              title="Filter to show posts from only one subreddit"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
+          <div>
+            <label class="block text-sm font-medium text-dark-muted mb-1">Subreddit</label>
+            <select id="filter-subreddit" class="w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
               <option value="">All Subreddits</option>
             </select>
           </div>
-          <div title="Only show posts with at least this many upvotes. Useful for filtering out low-quality or new posts.">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Min Score: <span id="min-score-value">0</span></label>
-            <input
-              type="range"
-              id="filter-min-score"
-              min="0"
-              max="100"
-              value="0"
-              title="Only show posts with at least this many upvotes"
-              class="w-full"
-            >
+          <div>
+            <label class="block text-sm font-medium text-dark-muted mb-1">Min Upvotes: <span id="min-upvotes-value">0</span></label>
+            <input type="range" id="filter-min-upvotes" min="0" max="100" value="0" class="w-full accent-blue-500">
           </div>
-          <div title="Only show posts with at least this triage score (0-10). Higher scores indicate stronger business opportunities.">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Min Opportunity: <span id="min-triage-value">0</span></label>
-            <input
-              type="range"
-              id="filter-min-triage"
-              min="0"
-              max="10"
-              value="0"
-              title="Only show posts with at least this triage score"
-              class="w-full"
-            >
+          <div>
+            <label class="block text-sm font-medium text-dark-muted mb-1">Min Triage Score: <span id="min-triage-value">0</span></label>
+            <input type="range" id="filter-min-triage" min="0" max="10" value="0" class="w-full accent-blue-500">
           </div>
         </div>
-        <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="flex items-center space-x-4">
-            <label class="flex items-center space-x-2 cursor-pointer" title="When checked, only shows posts you've manually flagged as interesting">
-              <input type="checkbox" id="filter-flagged" class="w-4 h-4 text-blue-600 rounded" title="Show only flagged posts">
-              <span class="text-sm font-medium text-gray-700">Flagged only</span>
-            </label>
-            <label class="flex items-center space-x-2 cursor-pointer" title="When checked, only shows posts identified as business passed">
-              <input type="checkbox" id="filter-triage" class="w-4 h-4 text-green-600 rounded" title="Show only passed">
-              <span class="text-sm font-medium text-gray-700">Opportunities only</span>
-            </label>
-          </div>
-          <div id="filter-status" class="text-sm text-gray-500 flex items-center">
-            <!-- Filter status will be populated here -->
-          </div>
-        </div>
-        <div class="mt-4 flex justify-between items-center">
-          <button
-            onclick="loadPosts()"
-            title="Apply all filter settings to refresh the post list"
-            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            Apply Filters
-          </button>
-          <div class="flex space-x-3">
-            <button
-              onclick="triggerFilter()"
-              id="filter-btn"
-              title="Run AI evaluation on unevaluated posts to identify business passed"
-              class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            >
-              Filter Now
-            </button>
-            <button
-              onclick="stopFilter()"
-              id="stop-filter-btn"
-              title="Stop the currently running filter job"
-              class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 hidden"
-            >
-              Stop Filter
-            </button>
-            <button
-              onclick="triggerCollect()"
-              id="collect-btn"
-              title="Manually trigger an RSS fetch from all enabled subreddits. Normally runs automatically every 30 minutes."
-              class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              Collect Now
-            </button>
-          </div>
+        <div class="mt-4 flex flex-wrap items-center gap-4">
+          <label class="flex items-center space-x-2 cursor-pointer">
+            <input type="checkbox" id="filter-bookmarked" class="w-4 h-4 rounded bg-dark-bg border-dark-border text-yellow-500 focus:ring-yellow-500">
+            <span class="text-sm text-dark-muted">Bookmarked only</span>
+          </label>
+          <label class="flex items-center space-x-2 cursor-pointer">
+            <input type="checkbox" id="filter-passed" class="w-4 h-4 rounded bg-dark-bg border-dark-border text-green-500 focus:ring-green-500">
+            <span class="text-sm text-dark-muted">Passed triage only</span>
+          </label>
+          <label class="flex items-center space-x-2 cursor-pointer">
+            <input type="checkbox" id="filter-evaluated" class="w-4 h-4 rounded bg-dark-bg border-dark-border text-purple-500 focus:ring-purple-500">
+            <span class="text-sm text-dark-muted">Evaluated only</span>
+          </label>
+          
+          <div class="flex-1"></div>
+          
+          <span id="filter-status" class="text-sm text-dark-muted"></span>
+          
+          <button onclick="triggerTriage()" id="triage-btn" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm">Triage Now</button>
+          <button onclick="stopTriage()" id="stop-triage-btn" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm hidden">Stop Triage</button>
+          <button onclick="triggerCollect()" id="collect-btn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm">Collect Now</button>
         </div>
       </div>
 
       <!-- Posts List -->
-      <div id="posts-container" class="space-y-4">
-        <p class="text-gray-500 text-center py-8">Loading posts...</p>
+      <div id="posts-container" class="space-y-3">
+        <p class="text-dark-muted text-center py-8">Loading posts...</p>
       </div>
 
       <!-- Pagination -->
-      <div id="pagination" class="mt-6 flex justify-center space-x-2 hidden">
-        <button
-          onclick="prevPage()"
-          id="prev-btn"
-          class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:opacity-50"
-        >
-          Previous
-        </button>
-        <span id="page-info" class="px-4 py-2 text-gray-600"></span>
-        <button
-          onclick="nextPage()"
-          id="next-btn"
-          class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:opacity-50"
-        >
-          Next
-        </button>
+      <div id="pagination" class="mt-6 flex justify-center items-center space-x-4 hidden">
+        <button onclick="prevPage()" id="prev-btn" class="px-4 py-2 bg-dark-card border border-dark-border text-dark-text rounded-md hover:bg-dark-border disabled:opacity-50">Previous</button>
+        <span id="page-info" class="text-dark-muted"></span>
+        <button onclick="nextPage()" id="next-btn" class="px-4 py-2 bg-dark-card border border-dark-border text-dark-text rounded-md hover:bg-dark-border disabled:opacity-50">Next</button>
       </div>
     </div>
 
     <!-- Subreddits View -->
     <div id="view-subreddits" class="hidden">
-      <!-- Add Subreddit -->
-      <div class="bg-white rounded-lg shadow p-4 mb-6">
-        <h2 class="text-lg font-semibold text-gray-800 mb-3">Add Subreddit</h2>
-        <div class="flex space-x-4">
-          <input
-            type="text"
-            id="new-subreddit"
-            placeholder="e.g., SomebodyMakeThis"
-            class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-          <button
-            onclick="addSubreddit()"
-            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            Add
-          </button>
+      <div class="bg-dark-card rounded-lg shadow-lg p-4 mb-6 border border-dark-border">
+        <div class="flex items-center space-x-4">
+          <input type="text" id="new-subreddit" placeholder="Add subreddit (e.g., SomebodyMakeThis)" 
+            class="flex-1 px-3 py-2 bg-dark-bg border border-dark-border rounded-md text-white placeholder-dark-muted focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <button onclick="addSubreddit()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Add</button>
         </div>
       </div>
-
-      <!-- Subreddits List -->
-      <div id="subreddits-container" class="space-y-3">
-        <p class="text-gray-500 text-center py-8">Loading subreddits...</p>
+      <div id="subreddits-container" class="space-y-2">
+        <p class="text-dark-muted text-center py-8">Loading subreddits...</p>
       </div>
     </div>
   </div>
 
   <script>
-    // State
-    let currentView = 'posts';
-    let posts = [];
-    let subreddits = [];
-    let currentOffset = 0;
-    let totalPosts = 0;
-    const limit = 50;
+    let currentPage = 1;
+    const pageSize = 50;
+    let expandedPostId = null;
+
+    // Debounce function for auto-filter
+    function debounce(func, wait) {
+      let timeout;
+      return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+      };
+    }
 
     // View switching
     function showView(view) {
-      currentView = view;
       document.getElementById('view-posts').classList.toggle('hidden', view !== 'posts');
       document.getElementById('view-subreddits').classList.toggle('hidden', view !== 'subreddits');
-
+      
       document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
-        btn.classList.add('text-gray-500');
+        btn.classList.remove('text-blue-400', 'border-b-2', 'border-blue-400');
+        btn.classList.add('text-dark-muted');
       });
-
+      
       const activeTab = document.getElementById(`tab-${view}`);
-      activeTab.classList.remove('text-gray-500');
-      activeTab.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
-
-      if (view === 'subreddits') {
-        loadSubreddits();
-      }
+      activeTab.classList.remove('text-dark-muted');
+      activeTab.classList.add('text-blue-400', 'border-b-2', 'border-blue-400');
+      
+      if (view === 'subreddits') loadSubreddits();
     }
 
-    // Render triage score badge
-    function renderOpportunityBadge(post) {
-      if (!post.isTriaged) return '';
-      if (post.triageScore === null) return '';
-
+    // Triage score badge
+    function renderTriageBadge(post) {
+      if (!post.isTriaged || post.triageScore === null) return '';
       const score = post.triageScore;
-      let bgColor, textColor;
-
-      if (score >= 7) {
-        bgColor = 'bg-green-100';
-        textColor = 'text-green-800';
-      } else if (score >= 4) {
-        bgColor = 'bg-yellow-100';
-        textColor = 'text-yellow-800';
-      } else {
-        bgColor = 'bg-gray-100';
-        textColor = 'text-gray-600';
-      }
-
-      return `<span class="px-2 py-1 text-xs font-medium rounded-full ${bgColor} ${textColor}" title="Triage Score">
-        ${score}/10
-      </span>`;
+      let bg = score >= 7 ? 'bg-green-600' : score >= 4 ? 'bg-yellow-600' : 'bg-gray-600';
+      return `<span class="px-2 py-0.5 text-xs font-medium rounded ${bg} text-white">${score}/10</span>`;
     }
 
-    // Load filter status
-    async function loadFilterStatus() {
+    // Evaluation badge
+    function renderEvalBadge(post) {
+      if (!post.isEvaluated || post.totalScore === null) return '';
+      return `<span class="px-2 py-0.5 text-xs font-medium rounded bg-purple-600 text-white">Eval: ${post.totalScore}/40</span>`;
+    }
+
+    // Load triage status
+    async function loadTriageStatus() {
       try {
         const res = await fetch('/api/filter/status');
         const data = await res.json();
-
         const statusEl = document.getElementById('filter-status');
-        const filterBtn = document.getElementById('filter-btn');
-        const stopBtn = document.getElementById('stop-filter-btn');
+        const triageBtn = document.getElementById('triage-btn');
+        const stopBtn = document.getElementById('stop-triage-btn');
         
         if (data.isConfigured) {
-          statusEl.innerHTML = `
-            <span class="inline-flex items-center">
-              <span class="w-2 h-2 rounded-full ${data.isRunning ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'} mr-2"></span>
-              ${data.triaged}/${data.total} evaluated &bull; ${data.passed} opportunities
-              ${data.pending > 0 ? `&bull; <span class="text-orange-500">${data.pending} pending</span>` : ''}
-            </span>
-          `;
+          const indicator = data.isRunning || data.isBackgroundRunning 
+            ? '<span class="inline-block w-2 h-2 rounded-full bg-yellow-500 animate-pulse mr-2"></span>'
+            : '<span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>';
+          statusEl.innerHTML = `${indicator}${data.triaged}/${data.total} triaged · ${data.passed} passed${data.pending > 0 ? ` · <span class="text-orange-400">${data.pending} pending</span>` : ''}`;
           
-          // Toggle buttons based on running state
           if (data.isRunning) {
-            filterBtn.classList.add('hidden');
+            triageBtn.classList.add('hidden');
             stopBtn.classList.remove('hidden');
           } else {
-            filterBtn.classList.remove('hidden');
-            filterBtn.disabled = false;
-            filterBtn.textContent = 'Filter Now';
+            triageBtn.classList.remove('hidden');
             stopBtn.classList.add('hidden');
           }
         } else {
-          statusEl.innerHTML = `
-            <span class="text-orange-500">AI filter not configured (GEMINI_API_KEY missing)</span>
-          `;
-          // Hide both buttons if not configured
-          filterBtn.disabled = true;
-          filterBtn.classList.add('opacity-50', 'cursor-not-allowed');
-          stopBtn.classList.add('hidden');
+          statusEl.innerHTML = '<span class="text-orange-400">Triage not configured (GEMINI_API_KEY missing)</span>';
+          triageBtn.disabled = true;
+          triageBtn.classList.add('opacity-50');
         }
       } catch (err) {
-        console.error('Failed to load filter status:', err);
+        console.error('Failed to load triage status:', err);
       }
     }
 
-    // Trigger filter
-    async function triggerFilter() {
-      const filterBtn = document.getElementById('filter-btn');
-      const stopBtn = document.getElementById('stop-filter-btn');
-      
-      // Swap buttons immediately
-      filterBtn.classList.add('hidden');
+    // Trigger triage
+    async function triggerTriage() {
+      const triageBtn = document.getElementById('triage-btn');
+      const stopBtn = document.getElementById('stop-triage-btn');
+      triageBtn.classList.add('hidden');
       stopBtn.classList.remove('hidden');
 
       try {
         const res = await fetch('/api/filter', { method: 'POST' });
         const data = await res.json();
-
         if (data.success) {
-          const msg = data.stopped 
-            ? `Filter stopped. Evaluated ${data.triaged} posts, found ${data.passed} opportunities.`
-            : `Filter complete! Evaluated ${data.triaged} posts, found ${data.passed} opportunities.`;
-          alert(msg);
+          alert(`Triage ${data.stopped ? 'stopped' : 'complete'}! Triaged ${data.triaged} posts, ${data.passed} passed.`);
           loadPosts();
         } else {
-          alert('Filter failed: ' + (data.error || 'Unknown error'));
+          alert('Triage failed: ' + (data.error || 'Unknown error'));
         }
       } catch (err) {
-        console.error('Failed to trigger filter:', err);
-        alert('Failed to trigger filter');
+        alert('Failed to trigger triage');
       } finally {
-        loadFilterStatus();
+        loadTriageStatus();
       }
     }
 
-    // Stop filter
-    async function stopFilter() {
-      const stopBtn = document.getElementById('stop-filter-btn');
+    // Stop triage
+    async function stopTriage() {
+      const stopBtn = document.getElementById('stop-triage-btn');
       stopBtn.disabled = true;
       stopBtn.textContent = 'Stopping...';
-
       try {
-        const res = await fetch('/api/filter/stop', { method: 'POST' });
-        const data = await res.json();
-
-        if (!data.success) {
-          alert('Failed to stop: ' + (data.error || 'Unknown error'));
-        }
+        await fetch('/api/filter/stop', { method: 'POST' });
       } catch (err) {
-        console.error('Failed to stop filter:', err);
-        alert('Failed to stop filter');
+        alert('Failed to stop triage');
       } finally {
         stopBtn.disabled = false;
-        stopBtn.textContent = 'Stop Filter';
+        stopBtn.textContent = 'Stop Triage';
       }
     }
 
-    // Format relative time
+    // Toggle post expansion
+    function togglePost(postId) {
+      expandedPostId = expandedPostId === postId ? null : postId;
+      loadPosts();
+    }
+
+    // Toggle bookmark
+    async function toggleBookmark(postId, e) {
+      e.stopPropagation();
+      try {
+        const post = window.postsCache?.find(p => p.id === postId);
+        if (!post) return;
+        await fetch(`/api/posts/${postId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isFlagged: !post.isFlagged })
+        });
+        loadPosts();
+      } catch (err) {
+        console.error('Failed to toggle bookmark:', err);
+      }
+    }
+
+    // Time ago
     function timeAgo(date) {
       const seconds = Math.floor((new Date() - new Date(date)) / 1000);
       const intervals = [
@@ -361,211 +279,178 @@
     async function loadPosts() {
       const search = document.getElementById('filter-search').value;
       const subreddit = document.getElementById('filter-subreddit').value;
-      const minScore = document.getElementById('filter-min-score').value;
-      const minOpportunity = document.getElementById('filter-min-triage').value;
-      const flagged = document.getElementById('filter-flagged').checked;
-      const triageOnly = document.getElementById('filter-triage').checked;
+      const minUpvotes = document.getElementById('filter-min-upvotes').value;
+      const minTriage = document.getElementById('filter-min-triage').value;
+      const bookmarked = document.getElementById('filter-bookmarked').checked;
+      const passed = document.getElementById('filter-passed').checked;
+      const evaluated = document.getElementById('filter-evaluated').checked;
 
       const params = new URLSearchParams();
-      if (search) params.set('search', search);
-      if (subreddit) params.set('subreddit', subreddit);
-      if (minScore > 0) params.set('minScore', minScore);
-      if (minOpportunity > 0) params.set('minOpportunityScore', minOpportunity);
-      if (flagged) params.set('flagged', 'true');
-      if (triageOnly) params.set('triage', 'true');
-      params.set('limit', limit);
-      params.set('offset', currentOffset);
+      if (search) params.append('search', search);
+      if (subreddit) params.append('subreddit', subreddit);
+      if (minUpvotes > 0) params.append('minScore', minUpvotes);
+      if (minTriage > 0) params.append('minTriageScore', minTriage);
+      if (bookmarked) params.append('flagged', 'true');
+      if (passed) params.append('passedTriage', 'true');
+      if (evaluated) params.append('evaluated', 'true');
+      params.append('limit', pageSize);
+      params.append('offset', (currentPage - 1) * pageSize);
 
       try {
         const res = await fetch(`/api/posts?${params}`);
         const data = await res.json();
-        posts = data.posts;
-        totalPosts = data.total;
-        renderPosts();
-      } catch (err) {
-        console.error('Failed to load posts:', err);
-        document.getElementById('posts-container').innerHTML =
-          '<p class="text-red-500 text-center py-8">Failed to load posts</p>';
-      }
-    }
+        window.postsCache = data.posts;
 
-    // Render posts
-    function renderPosts() {
-      const container = document.getElementById('posts-container');
-
-      if (posts.length === 0) {
-        container.innerHTML = '<p class="text-gray-500 text-center py-8">No posts found</p>';
-        document.getElementById('pagination').classList.add('hidden');
-        return;
-      }
-
-      container.innerHTML = posts.map(post => `
-        <div class="bg-white rounded-lg shadow p-4 ${post.isFlagged ? 'border-l-4 border-yellow-500' : ''} ${post.passedTriage ? 'border-l-4 border-green-500' : ''}">
-          <div class="flex justify-between items-start">
-            <div class="flex-1">
-              <div class="flex items-center gap-2 flex-wrap">
-                <a
-                  href="${post.url}"
-                  target="_blank"
-                  class="text-lg font-medium text-blue-600 hover:underline"
-                >
-                  ${escapeHtml(post.title)}
-                </a>
-                ${renderOpportunityBadge(post)}
+        const container = document.getElementById('posts-container');
+        if (data.posts.length === 0) {
+          container.innerHTML = '<p class="text-dark-muted text-center py-8">No posts found</p>';
+        } else {
+          container.innerHTML = data.posts.map(post => {
+            const isExpanded = expandedPostId === post.id;
+            const borderColor = post.isFlagged ? 'border-l-4 border-yellow-500' : post.passedTriage ? 'border-l-4 border-green-500' : '';
+            
+            return `
+              <div class="bg-dark-card rounded-lg border border-dark-border ${borderColor} overflow-hidden">
+                <div class="p-4 cursor-pointer hover:bg-dark-border/30" onclick="togglePost('${post.id}')">
+                  <div class="flex items-start justify-between gap-4">
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <h3 class="font-medium text-white hover:text-blue-400">${post.title}</h3>
+                        ${renderTriageBadge(post)}
+                        ${renderEvalBadge(post)}
+                      </div>
+                      <div class="text-sm text-dark-muted mt-1">
+                        <span class="text-blue-400">r/${post.subreddit}</span> · ${post.author} · ${timeAgo(post.createdUtc)} · ${post.score} pts · ${post.numComments} comments
+                      </div>
+                    </div>
+                    <button onclick="toggleBookmark('${post.id}', event)" class="p-2 hover:bg-dark-border rounded ${post.isFlagged ? 'text-yellow-500' : 'text-dark-muted hover:text-yellow-500'}">
+                      <svg class="w-5 h-5" fill="${post.isFlagged ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                
+                ${isExpanded ? `
+                  <div class="px-4 pb-4 border-t border-dark-border">
+                    ${post.body ? `<p class="text-dark-text mt-3 text-sm whitespace-pre-wrap">${post.body.substring(0, 1000)}${post.body.length > 1000 ? '...' : ''}</p>` : ''}
+                    
+                    <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <!-- Triage Info -->
+                      <div class="bg-dark-bg rounded-lg p-3 border border-dark-border">
+                        <h4 class="text-sm font-medium text-dark-muted mb-2">Triage (Gemini)</h4>
+                        ${post.isTriaged ? `
+                          <div class="space-y-1 text-sm">
+                            <div class="flex justify-between"><span class="text-dark-muted">Score:</span><span class="text-white">${post.triageScore}/10</span></div>
+                            <div class="flex justify-between"><span class="text-dark-muted">Passed:</span><span class="${post.passedTriage ? 'text-green-400' : 'text-red-400'}">${post.passedTriage ? 'Yes' : 'No'}</span></div>
+                            ${post.triageReason ? `<p class="text-dark-muted text-xs mt-2 italic">${post.triageReason}</p>` : ''}
+                          </div>
+                        ` : '<p class="text-dark-muted text-sm">Not triaged yet</p>'}
+                      </div>
+                      
+                      <!-- Evaluation Info -->
+                      <div class="bg-dark-bg rounded-lg p-3 border border-dark-border">
+                        <h4 class="text-sm font-medium text-dark-muted mb-2">Evaluation (Glitch)</h4>
+                        ${post.isEvaluated ? `
+                          <div class="space-y-1 text-sm">
+                            <div class="flex justify-between"><span class="text-dark-muted">Market Size:</span><span class="text-white">${post.marketSizeScore}/10</span></div>
+                            <div class="flex justify-between"><span class="text-dark-muted">WTP:</span><span class="text-white">${post.wtpScore}/10</span></div>
+                            <div class="flex justify-between"><span class="text-dark-muted">Ease:</span><span class="text-white">${post.easeScore}/10</span></div>
+                            <div class="flex justify-between"><span class="text-dark-muted">Competition:</span><span class="text-white">${post.competitionScore}/10</span></div>
+                            <div class="flex justify-between font-medium"><span class="text-dark-muted">Total:</span><span class="text-purple-400">${post.totalScore}/40</span></div>
+                            ${post.evaluationNotes ? `<p class="text-dark-muted text-xs mt-2 italic">${post.evaluationNotes}</p>` : ''}
+                          </div>
+                        ` : '<p class="text-dark-muted text-sm">Not evaluated yet</p>'}
+                      </div>
+                    </div>
+                    
+                    <div class="mt-4 flex justify-end">
+                      <a href="${post.url}" target="_blank" rel="noopener" class="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1">
+                        View on Reddit
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                        </svg>
+                      </a>
+                    </div>
+                  </div>
+                ` : ''}
               </div>
-              <div class="mt-1 text-sm text-gray-500">
-                <span class="font-medium text-gray-700">r/${post.subreddit}</span>
-                &bull; ${post.author}
-                &bull; ${timeAgo(post.createdUtc)}
-                &bull; ${post.score} points
-                &bull; ${post.numComments} comments
-                ${post.isTriaged ? '' : '<span class="text-orange-500">&bull; Not triaged</span>'}
-              </div>
-              ${post.body ? `<p class="mt-2 text-gray-600 text-sm line-clamp-2">${escapeHtml(post.body.substring(0, 200))}${post.body.length > 200 ? '...' : ''}</p>` : ''}
-              ${post.triageReason ? `<p class="mt-2 text-sm text-green-700 bg-green-50 p-2 rounded">${escapeHtml(post.triageReason)}</p>` : ''}
-            </div>
-            <button
-              onclick="toggleFlag('${post.id}', ${!post.isFlagged})"
-              class="ml-4 p-2 rounded-full ${post.isFlagged ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100 text-gray-400'} hover:bg-yellow-200"
-              title="${post.isFlagged ? 'Unflag' : 'Flag'}"
-            >
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      `).join('');
+            `;
+          }).join('');
+        }
 
-      // Update pagination
-      const pagination = document.getElementById('pagination');
-      pagination.classList.remove('hidden');
-      document.getElementById('page-info').textContent =
-        `${currentOffset + 1}-${Math.min(currentOffset + limit, totalPosts)} of ${totalPosts}`;
-      document.getElementById('prev-btn').disabled = currentOffset === 0;
-      document.getElementById('next-btn').disabled = currentOffset + limit >= totalPosts;
-    }
-
-    // Toggle flag
-    async function toggleFlag(postId, flagged) {
-      try {
-        await fetch(`/api/posts/${postId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ isFlagged: flagged })
-        });
-        loadPosts();
+        // Pagination
+        const totalPages = Math.ceil(data.total / pageSize);
+        const pagination = document.getElementById('pagination');
+        const pageInfo = document.getElementById('page-info');
+        
+        if (totalPages > 1) {
+          pagination.classList.remove('hidden');
+          pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+          document.getElementById('prev-btn').disabled = currentPage === 1;
+          document.getElementById('next-btn').disabled = currentPage === totalPages;
+        } else {
+          pagination.classList.add('hidden');
+        }
       } catch (err) {
-        console.error('Failed to toggle flag:', err);
+        console.error('Error fetching posts:', err);
+        document.getElementById('posts-container').innerHTML = '<p class="text-red-400 text-center py-8">Failed to load posts</p>';
       }
     }
 
-    // Pagination
-    function prevPage() {
-      if (currentOffset > 0) {
-        currentOffset = Math.max(0, currentOffset - limit);
-        loadPosts();
-      }
-    }
-
-    function nextPage() {
-      if (currentOffset + limit < totalPosts) {
-        currentOffset += limit;
-        loadPosts();
-      }
-    }
+    function prevPage() { if (currentPage > 1) { currentPage--; loadPosts(); } }
+    function nextPage() { currentPage++; loadPosts(); }
 
     // Load subreddits
     async function loadSubreddits() {
       try {
         const res = await fetch('/api/subreddits');
-        subreddits = await res.json();
-        renderSubreddits();
-        updateSubredditFilter();
+        const data = await res.json();
+
+        // Populate filter dropdown
+        const select = document.getElementById('filter-subreddit');
+        select.innerHTML = '<option value="">All Subreddits</option>' + 
+          data.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+
+        // Render list
+        const container = document.getElementById('subreddits-container');
+        container.innerHTML = data.map(s => `
+          <div class="bg-dark-card rounded-lg border border-dark-border p-4 flex items-center justify-between">
+            <div>
+              <span class="font-medium text-white">r/${s.name}</span>
+              <span class="text-sm text-dark-muted ml-2">${s.postCount || 0} posts</span>
+            </div>
+            <div class="flex items-center space-x-4">
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="checkbox" ${s.enabled ? 'checked' : ''} onchange="toggleSubreddit('${s.id}', this.checked)" class="w-4 h-4 rounded">
+                <span class="text-sm text-dark-muted">Enabled</span>
+              </label>
+              <button onclick="deleteSubreddit('${s.id}', '${s.name}')" class="text-red-400 hover:text-red-300 text-sm">Delete</button>
+            </div>
+          </div>
+        `).join('');
       } catch (err) {
         console.error('Failed to load subreddits:', err);
-        document.getElementById('subreddits-container').innerHTML =
-          '<p class="text-red-500 text-center py-8">Failed to load subreddits</p>';
       }
     }
 
-    // Render subreddits
-    function renderSubreddits() {
-      const container = document.getElementById('subreddits-container');
-
-      if (subreddits.length === 0) {
-        container.innerHTML = '<p class="text-gray-500 text-center py-8">No subreddits configured</p>';
-        return;
-      }
-
-      container.innerHTML = subreddits.map(sub => `
-        <div class="bg-white rounded-lg shadow p-4 flex items-center justify-between">
-          <div>
-            <span class="font-medium text-gray-800">r/${sub.name}</span>
-            <span class="ml-2 text-sm text-gray-500">${sub.postCount} posts</span>
-            ${sub.lastFetchedAt ? `<span class="ml-2 text-sm text-gray-400">Last fetched: ${timeAgo(sub.lastFetchedAt)}</span>` : ''}
-          </div>
-          <div class="flex items-center space-x-3">
-            <label class="flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                ${sub.enabled ? 'checked' : ''}
-                onchange="toggleSubreddit('${sub.id}', this.checked)"
-                class="w-4 h-4 text-blue-600 rounded"
-              >
-              <span class="ml-2 text-sm text-gray-600">Enabled</span>
-            </label>
-            <button
-              onclick="deleteSubreddit('${sub.id}', '${sub.name}')"
-              class="p-2 text-red-500 hover:bg-red-100 rounded"
-              title="Delete"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    // Update subreddit filter dropdown
-    function updateSubredditFilter() {
-      const select = document.getElementById('filter-subreddit');
-      const currentValue = select.value;
-      select.innerHTML = '<option value="">All Subreddits</option>' +
-        subreddits.map(sub => `<option value="${sub.name}">${sub.name}</option>`).join('');
-      select.value = currentValue;
-    }
-
-    // Add subreddit
     async function addSubreddit() {
       const input = document.getElementById('new-subreddit');
-      const name = input.value.trim();
-
+      const name = input.value.trim().replace(/^r\//, '');
       if (!name) return;
-
       try {
-        const res = await fetch('/api/subreddits', {
+        await fetch('/api/subreddits', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name })
         });
-
-        if (res.ok) {
-          input.value = '';
-          loadSubreddits();
-        } else {
-          const data = await res.json();
-          alert(data.error || 'Failed to add subreddit');
-        }
+        input.value = '';
+        loadSubreddits();
       } catch (err) {
-        console.error('Failed to add subreddit:', err);
         alert('Failed to add subreddit');
       }
     }
 
-    // Toggle subreddit enabled
     async function toggleSubreddit(id, enabled) {
       try {
         await fetch(`/api/subreddits/${id}`, {
@@ -573,44 +458,32 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ enabled })
         });
-        loadSubreddits();
       } catch (err) {
-        console.error('Failed to toggle subreddit:', err);
+        alert('Failed to update subreddit');
+        loadSubreddits();
       }
     }
 
-    // Delete subreddit
     async function deleteSubreddit(id, name) {
-      if (!confirm(`Delete r/${name} and all its posts?`)) return;
-
+      if (!confirm(`Delete r/${name}? This will also delete all posts from this subreddit.`)) return;
       try {
         await fetch(`/api/subreddits/${id}`, { method: 'DELETE' });
         loadSubreddits();
       } catch (err) {
-        console.error('Failed to delete subreddit:', err);
         alert('Failed to delete subreddit');
       }
     }
 
-    // Trigger collection
     async function triggerCollect() {
       const btn = document.getElementById('collect-btn');
       btn.disabled = true;
       btn.textContent = 'Collecting...';
-
       try {
         const res = await fetch('/api/collect', { method: 'POST' });
         const data = await res.json();
-
-        if (data.success) {
-          alert(`Collection complete! Fetched ${data.totalFetched} posts, ${data.totalNew} new.`);
-          loadPosts();
-          loadSubreddits();
-        } else {
-          alert('Collection failed: ' + (data.error || 'Unknown error'));
-        }
+        alert(`Collection complete! Fetched ${data.totalFetched} posts, ${data.totalNew} new.`);
+        loadPosts();
       } catch (err) {
-        console.error('Failed to trigger collection:', err);
         alert('Failed to trigger collection');
       } finally {
         btn.disabled = false;
@@ -618,26 +491,22 @@
       }
     }
 
-    // Escape HTML
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
+    // Auto-filter on change
+    const debouncedLoadPosts = debounce(() => { currentPage = 1; loadPosts(); }, 300);
 
-    // Event listeners
-    document.getElementById('filter-min-score').addEventListener('input', (e) => {
-      document.getElementById('min-score-value').textContent = e.target.value;
+    document.getElementById('filter-search').addEventListener('input', debouncedLoadPosts);
+    document.getElementById('filter-subreddit').addEventListener('change', debouncedLoadPosts);
+    document.getElementById('filter-min-upvotes').addEventListener('input', (e) => {
+      document.getElementById('min-upvotes-value').textContent = e.target.value;
+      debouncedLoadPosts();
     });
-
     document.getElementById('filter-min-triage').addEventListener('input', (e) => {
       document.getElementById('min-triage-value').textContent = e.target.value;
+      debouncedLoadPosts();
     });
-
-    document.getElementById('filter-search').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') loadPosts();
-    });
-
+    document.getElementById('filter-bookmarked').addEventListener('change', debouncedLoadPosts);
+    document.getElementById('filter-passed').addEventListener('change', debouncedLoadPosts);
+    document.getElementById('filter-evaluated').addEventListener('change', debouncedLoadPosts);
     document.getElementById('new-subreddit').addEventListener('keypress', (e) => {
       if (e.key === 'Enter') addSubreddit();
     });
@@ -645,10 +514,8 @@
     // Initial load
     loadPosts();
     loadSubreddits();
-    loadFilterStatus();
-    
-    // Poll filter status every 5 seconds to keep UI in sync
-    setInterval(loadFilterStatus, 5000);
+    loadTriageStatus();
+    setInterval(loadTriageStatus, 5000);
   </script>
 </body>
 </html>
