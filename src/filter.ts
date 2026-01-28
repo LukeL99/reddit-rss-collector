@@ -43,7 +43,7 @@ const filterResultSchema = {
   required: ["isOpportunity", "score", "reason"],
 };
 
-const PROMPT_TEMPLATE = `You are evaluating Reddit posts for business opportunity potential.
+const PROMPT_TEMPLATE = `You are identifying Reddit posts where someone has a PROBLEM that could be solved with software.
 
 POST TITLE: {title}
 POST BODY: {body}
@@ -51,13 +51,22 @@ SUBREDDIT: r/{subreddit}
 UPVOTES: {score}
 COMMENTS: {numComments}
 
-Scoring criteria:
-- Is this a real problem someone would pay to solve?
-- Could a small team build a solution in weeks/months?
-- Is there evidence of demand beyond this one person?
-- Is it specific and actionable (not vague wishes)?
+WHAT IS AN OPPORTUNITY (score 7-10):
+- Someone frustrated with a manual/tedious process
+- "Is there a tool/app that does X?"
+- "I wish there was a way to..."
+- Describing a specific workflow problem with no good solution
+- Pain point with evidence of demand (upvotes, "me too" comments)
 
-Be strict. Most posts are NOT opportunities. Score 7+ only for clear, buildable, validated pain points.`;
+WHAT IS NOT AN OPPORTUNITY (score 0-3):
+- Someone promoting/showing off their own project
+- Asking for feedback on something they built
+- General advice questions (career, relationships, health)
+- Vague wishes without specific problems
+- Problems that can't be solved with software
+- Already well-served markets (another todo app, note-taking, etc.)
+
+Be VERY strict. 95% of posts are NOT opportunities. Only score 7+ for clear, specific, buildable pain points where someone is actively struggling.`;
 
 function buildPrompt(post: Post & { subreddit: { name: string } }): string {
   return PROMPT_TEMPLATE
