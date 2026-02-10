@@ -76,6 +76,58 @@
           </div>
         </div>
         
+        <!-- Metadata Filters -->
+        <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 p-3 bg-dark-bg rounded-lg border border-dark-border">
+          <div class="col-span-2 md:col-span-4 text-xs font-medium text-emerald-400 uppercase tracking-wide">Metadata Filters</div>
+          <div>
+            <label class="block text-xs text-dark-muted mb-1">Segment</label>
+            <select id="filter-segment" class="w-full px-2 py-1.5 bg-dark-card border border-dark-border rounded text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+              <option value="">All</option>
+              <option value="consumer">Consumer</option>
+              <option value="smb">SMB</option>
+              <option value="mid-market">Mid-Market</option>
+              <option value="enterprise">Enterprise</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-dark-muted mb-1">Industry</label>
+            <select id="filter-industry" class="w-full px-2 py-1.5 bg-dark-card border border-dark-border rounded text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+              <option value="">All</option>
+              <option value="saas">SaaS</option>
+              <option value="ecommerce">E-commerce</option>
+              <option value="healthcare">Healthcare</option>
+              <option value="finance">Finance</option>
+              <option value="legal">Legal</option>
+              <option value="real-estate">Real Estate</option>
+              <option value="education">Education</option>
+              <option value="marketing">Marketing</option>
+              <option value="dev-tools">Dev Tools</option>
+              <option value="food-bev">Food & Bev</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-dark-muted mb-1">Revenue Type</label>
+            <select id="filter-revenue-type" class="w-full px-2 py-1.5 bg-dark-card border border-dark-border rounded text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+              <option value="">All</option>
+              <option value="saas">SaaS</option>
+              <option value="usage-based">Usage-Based</option>
+              <option value="one-time">One-Time</option>
+              <option value="freemium">Freemium</option>
+              <option value="marketplace">Marketplace</option>
+              <option value="api-metered">API Metered</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-dark-muted mb-1">Urgency</label>
+            <select id="filter-urgency" class="w-full px-2 py-1.5 bg-dark-card border border-dark-border rounded text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+              <option value="">All</option>
+              <option value="nice-to-have">Nice to Have</option>
+              <option value="pain-point">Pain Point</option>
+              <option value="hair-on-fire">Hair on Fire 🔥</option>
+            </select>
+          </div>
+        </div>
+        
         <!-- Evaluation Filters -->
         <div class="mt-4 grid grid-cols-2 md:grid-cols-5 gap-4 p-3 bg-dark-bg rounded-lg border border-dark-border">
           <div class="col-span-2 md:col-span-5 text-xs font-medium text-purple-400 uppercase tracking-wide">Glitch's Evaluation Filters</div>
@@ -256,6 +308,10 @@
       document.getElementById('filter-bookmarked').checked = false;
       document.getElementById('filter-passed').checked = false;
       document.getElementById('filter-evaluated').checked = false;
+      document.getElementById('filter-segment').value = '';
+      document.getElementById('filter-industry').value = '';
+      document.getElementById('filter-revenue-type').value = '';
+      document.getElementById('filter-urgency').value = '';
       currentPage = 1;
       loadPosts();
     }
@@ -291,6 +347,46 @@
     function renderEvalBadge(post) {
       if (post.totalScore === null) return '';
       return `<span class="px-2 py-0.5 text-xs font-medium rounded bg-purple-600 text-white">Eval: ${post.totalScore}/40</span>`;
+    }
+
+    // Urgency badge inline
+    function renderUrgencyBadge(post) {
+      if (!post.urgency) return '';
+      const colors = { 'nice-to-have': 'bg-gray-600', 'pain-point': 'bg-orange-600', 'hair-on-fire': 'bg-red-600' };
+      const labels = { 'nice-to-have': 'Nice to Have', 'pain-point': 'Pain Point', 'hair-on-fire': '🔥 Hair on Fire' };
+      return `<span class="px-2 py-0.5 text-xs font-medium rounded ${colors[post.urgency] || 'bg-gray-600'} text-white">${labels[post.urgency] || post.urgency}</span>`;
+    }
+
+    // Metadata section in expanded view
+    function renderMetadataSection(post) {
+      const fields = [
+        { label: 'Segment', value: post.segment },
+        { label: 'Business Model', value: post.businessModel },
+        { label: 'Industry', value: post.industry },
+        { label: 'Vertical', value: post.vertical },
+        { label: 'Revenue Type', value: post.revenueType },
+        { label: 'Pricing Tier', value: post.pricingTier },
+        { label: 'Revenue Ceiling', value: post.revenueCeiling ? `$${post.revenueCeiling.toLocaleString()}/mo` : null },
+        { label: 'Stack', value: post.stack },
+        { label: 'Data Moat', value: post.dataMoat },
+        { label: 'Maintenance', value: post.maintenance },
+        { label: 'Buyer', value: post.buyer },
+        { label: 'User Count', value: post.userCountEstimate },
+        { label: 'Geography', value: post.geography },
+        { label: 'Signal Source', value: post.signalSource },
+        { label: 'Urgency', value: post.urgency },
+        { label: 'Validation', value: post.validation },
+      ];
+      const filled = fields.filter(f => f.value);
+      if (filled.length === 0) return '';
+      return `
+        <div class="mt-4 bg-dark-bg rounded-lg p-3 border border-dark-border">
+          <h4 class="text-sm font-medium text-emerald-400 mb-2">Metadata</h4>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1.5 text-sm">
+            ${filled.map(f => `<div class="flex justify-between"><span class="text-dark-muted">${f.label}:</span><span class="text-white ml-2">${f.value}</span></div>`).join('')}
+          </div>
+        </div>
+      `;
     }
 
     // Load triage status
@@ -419,6 +515,12 @@
       const minWtp = document.getElementById('filter-min-wtp').value;
       const minEase = document.getElementById('filter-min-ease').value;
       const minComp = document.getElementById('filter-min-comp').value;
+      
+      // Metadata filters
+      const filterSegment = document.getElementById('filter-segment').value;
+      const filterIndustry = document.getElementById('filter-industry').value;
+      const filterRevenueType = document.getElementById('filter-revenue-type').value;
+      const filterUrgency = document.getElementById('filter-urgency').value;
 
       const params = new URLSearchParams();
       if (search) params.append('search', search);
@@ -433,6 +535,10 @@
       if (minWtp > 0) params.append('minWtp', minWtp);
       if (minEase > 0) params.append('minEase', minEase);
       if (minComp > 0) params.append('minCompetition', minComp);
+      if (filterSegment) params.append('segment', filterSegment);
+      if (filterIndustry) params.append('industry', filterIndustry);
+      if (filterRevenueType) params.append('revenueType', filterRevenueType);
+      if (filterUrgency) params.append('urgency', filterUrgency);
       params.append('limit', pageSize);
       params.append('offset', (currentPage - 1) * pageSize);
 
@@ -458,6 +564,7 @@
                         <h3 class="font-medium text-white hover:text-blue-400">${post.title}</h3>
                         ${renderTriageBadge(post)}
                         ${renderEvalBadge(post)}
+                        ${renderUrgencyBadge(post)}
                       </div>
                       <div class="text-sm text-dark-muted mt-1">
                         <span class="text-blue-400">r/${post.subreddit}</span> · ${post.author} · ${timeAgo(post.createdUtc)} · ${post.score} pts · ${post.numComments} comments
@@ -504,6 +611,8 @@
                         ` : '<p class="text-dark-muted text-sm">Not evaluated yet</p>'}
                       </div>
                     </div>
+                    
+                    ${renderMetadataSection(post)}
                     
                     <div class="mt-4 flex justify-end">
                       <a href="${post.url}" target="_blank" rel="noopener" class="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1">
@@ -692,7 +801,11 @@
               <td class="px-4 py-3 text-center">${scoreBadge(n.revenueScore, 10, 'green')}</td>
               <td class="px-4 py-3 text-center">${scoreBadge(n.nicheDefensibility, 10, 'blue')}</td>
               <td class="px-4 py-3 text-center">${scoreBadge(n.totalScore, 40, 'purple')}</td>
-              <td class="px-4 py-3"><span class="text-xs px-2 py-1 rounded bg-dark-bg text-dark-muted">${n.nicheSource || '—'}</span></td>
+              <td class="px-4 py-3">
+                <span class="text-xs px-2 py-1 rounded bg-dark-bg text-dark-muted">${n.nicheSource || '—'}</span>
+                ${n.industry ? `<span class="text-xs px-2 py-1 rounded bg-emerald-900/50 text-emerald-400 ml-1">${n.industry}</span>` : ''}
+                ${n.urgency ? `<span class="text-xs px-2 py-1 rounded ${n.urgency === 'hair-on-fire' ? 'bg-red-900/50 text-red-400' : n.urgency === 'pain-point' ? 'bg-orange-900/50 text-orange-400' : 'bg-gray-700 text-gray-400'} ml-1">${n.urgency}</span>` : ''}
+              </td>
             </tr>
           `).join('');
 
@@ -787,6 +900,10 @@
     document.getElementById('filter-bookmarked').addEventListener('change', debouncedLoadPosts);
     document.getElementById('filter-passed').addEventListener('change', debouncedLoadPosts);
     document.getElementById('filter-evaluated').addEventListener('change', debouncedLoadPosts);
+    document.getElementById('filter-segment').addEventListener('change', debouncedLoadPosts);
+    document.getElementById('filter-industry').addEventListener('change', debouncedLoadPosts);
+    document.getElementById('filter-revenue-type').addEventListener('change', debouncedLoadPosts);
+    document.getElementById('filter-urgency').addEventListener('change', debouncedLoadPosts);
     document.getElementById('new-subreddit').addEventListener('keypress', (e) => {
       if (e.key === 'Enter') addSubreddit();
     });

@@ -24,6 +24,15 @@ router.get("/", async (req, res) => {
       minEase,
       minCompetition,
       isNiche,
+      // Metadata filters
+      segment,
+      businessModel,
+      industry,
+      revenueType,
+      pricingTier,
+      stack,
+      urgency,
+      maintenance,
       limit = "50",
       offset = "0",
     } = req.query;
@@ -147,6 +156,16 @@ router.get("/", async (req, res) => {
       }
     }
 
+    // Metadata filters
+    if (segment && typeof segment === "string") where.segment = segment;
+    if (businessModel && typeof businessModel === "string") where.businessModel = businessModel;
+    if (industry && typeof industry === "string") where.industry = industry;
+    if (revenueType && typeof revenueType === "string") where.revenueType = revenueType;
+    if (pricingTier && typeof pricingTier === "string") where.pricingTier = pricingTier;
+    if (stack && typeof stack === "string") where.stack = stack;
+    if (urgency && typeof urgency === "string") where.urgency = urgency;
+    if (maintenance && typeof maintenance === "string") where.maintenance = maintenance;
+
     const take = Math.min(parseInt(limit as string, 10) || 50, 100);
     const skip = parseInt(offset as string, 10) || 0;
 
@@ -201,6 +220,23 @@ router.get("/", async (req, res) => {
         nicheDescription: p.nicheDescription,
         revenueScore: p.revenueScore,
         nicheDefensibility: p.nicheDefensibility,
+        // Metadata fields
+        segment: p.segment,
+        businessModel: p.businessModel,
+        industry: p.industry,
+        vertical: p.vertical,
+        revenueType: p.revenueType,
+        pricingTier: p.pricingTier,
+        revenueCeiling: p.revenueCeiling,
+        stack: p.stack,
+        dataMoat: p.dataMoat,
+        maintenance: p.maintenance,
+        buyer: p.buyer,
+        userCountEstimate: p.userCountEstimate,
+        geography: p.geography,
+        signalSource: p.signalSource,
+        urgency: p.urgency,
+        validation: p.validation,
       })),
       total,
       limit: take,
@@ -263,6 +299,23 @@ router.patch("/:id", async (req, res) => {
       competitionScore,
       totalScore,
       evaluationNotes,
+      // Metadata fields
+      segment,
+      businessModel,
+      industry,
+      vertical,
+      revenueType,
+      pricingTier,
+      revenueCeiling,
+      stack,
+      dataMoat,
+      maintenance,
+      buyer,
+      userCountEstimate,
+      geography,
+      signalSource,
+      urgency,
+      validation,
     } = req.body;
 
     const data: Prisma.PostUpdateInput = {};
@@ -293,6 +346,28 @@ router.patch("/:id", async (req, res) => {
     }
     if (typeof evaluationNotes === "string") {
       data.evaluationNotes = evaluationNotes;
+    }
+
+    // Metadata fields (string fields accept string or null to clear)
+    const stringMetaFields = [
+      'segment', 'businessModel', 'industry', 'vertical',
+      'revenueType', 'pricingTier', 'stack', 'dataMoat', 'maintenance',
+      'buyer', 'userCountEstimate', 'geography',
+      'signalSource', 'urgency', 'validation',
+    ] as const;
+    const metaValues: Record<string, any> = {
+      segment, businessModel, industry, vertical,
+      revenueType, pricingTier, stack, dataMoat, maintenance,
+      buyer, userCountEstimate, geography,
+      signalSource, urgency, validation,
+    };
+    for (const field of stringMetaFields) {
+      if (typeof metaValues[field] === "string" || metaValues[field] === null) {
+        (data as any)[field] = metaValues[field];
+      }
+    }
+    if (typeof revenueCeiling === "number" || revenueCeiling === null) {
+      data.revenueCeiling = revenueCeiling;
     }
 
     const post = await prisma.post.update({
@@ -331,6 +406,23 @@ router.patch("/:id", async (req, res) => {
       competitionScore: post.competitionScore,
       totalScore: post.totalScore,
       evaluationNotes: post.evaluationNotes,
+      // Metadata
+      segment: post.segment,
+      businessModel: post.businessModel,
+      industry: post.industry,
+      vertical: post.vertical,
+      revenueType: post.revenueType,
+      pricingTier: post.pricingTier,
+      revenueCeiling: post.revenueCeiling,
+      stack: post.stack,
+      dataMoat: post.dataMoat,
+      maintenance: post.maintenance,
+      buyer: post.buyer,
+      userCountEstimate: post.userCountEstimate,
+      geography: post.geography,
+      signalSource: post.signalSource,
+      urgency: post.urgency,
+      validation: post.validation,
     });
   } catch (err) {
     console.error("Error updating post:", err);

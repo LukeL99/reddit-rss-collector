@@ -60,6 +60,35 @@ model Post {
   revenueScore       Int?      @map("revenue_score")       // 1-10
   nicheDefensibility Int?      @map("niche_defensibility")  // 1-10
 
+  // Market Classification
+  segment          String?   // "consumer" | "smb" | "mid-market" | "enterprise"
+  businessModel    String?   @map("business_model")  // "b2c" | "b2b" | "b2b2c" | "prosumer"
+  industry         String?   // e.g. "saas", "ecommerce", "healthcare"
+  vertical         String?   // free text, more specific than industry
+
+  // Revenue Model
+  revenueType      String?   @map("revenue_type")     // "saas" | "usage-based" | "one-time" | "freemium" | "marketplace" | "api-metered"
+  pricingTier      String?   @map("pricing_tier")     // "free" | "under-20" | "20-50" | "50-100" | "100-500" | "500-plus"
+  revenueCeiling   Int?      @map("revenue_ceiling")  // realistic monthly revenue cap in dollars
+
+  // Build Complexity
+  stack            String?   // "web-app" | "mobile" | "browser-extension" | "api-cli" | "desktop" | "shopify-app" | "wordpress-plugin"
+  dataMoat         String?   @map("data_moat")    // "none" | "user-generated" | "proprietary-dataset" | "network-effects" | "integration-lock-in"
+  maintenance      String?   // "low" | "medium" | "high"
+
+  // Audience
+  buyer            String?   // "individual" | "team-lead" | "business-owner" | "it-admin"
+  userCountEstimate String?  @map("user_count_estimate")  // "hundreds" | "thousands" | "tens-of-thousands" | "hundreds-of-thousands"
+  geography        String?   // "global" | "us-only" | "region-specific" | "language-specific"
+
+  // Opportunity Quality
+  signalSource     String?   @map("signal_source")  // "complaint" | "is-there-a-tool" | "workflow-gap" | "manual-process" | "pricing-frustration"
+  urgency          String?   // "nice-to-have" | "pain-point" | "hair-on-fire"
+  validation       String?   // "single-post" | "multiple-posts" | "comments-confirm" | "existing-spend"
+
+  @@index([segment])
+  @@index([industry])
+  @@index([urgency])
   @@index([subredditId])
   @@index([createdUtc])
   @@index([isFlagged])

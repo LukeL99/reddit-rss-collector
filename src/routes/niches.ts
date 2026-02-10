@@ -38,6 +38,23 @@ function formatNiche(p: any) {
     competitionScore: p.competitionScore,
     totalScore: p.totalScore,
     evaluationNotes: p.evaluationNotes,
+    // Metadata
+    segment: p.segment,
+    businessModel: p.businessModel,
+    industry: p.industry,
+    vertical: p.vertical,
+    revenueType: p.revenueType,
+    pricingTier: p.pricingTier,
+    revenueCeiling: p.revenueCeiling,
+    stack: p.stack,
+    dataMoat: p.dataMoat,
+    maintenance: p.maintenance,
+    buyer: p.buyer,
+    userCountEstimate: p.userCountEstimate,
+    geography: p.geography,
+    signalSource: p.signalSource,
+    urgency: p.urgency,
+    validation: p.validation,
   };
 }
 
@@ -51,6 +68,15 @@ router.get("/", async (req, res) => {
       minRevenueScore,
       minDefensibility,
       search,
+      // Metadata filters
+      segment,
+      businessModel,
+      industry,
+      revenueType,
+      pricingTier,
+      stack,
+      urgency,
+      maintenance,
       limit = "50",
       offset = "0",
     } = req.query;
@@ -88,6 +114,16 @@ router.get("/", async (req, res) => {
         { nicheDescription: { contains: search, mode: "insensitive" } },
       ];
     }
+
+    // Metadata filters
+    if (segment && typeof segment === "string") where.segment = segment;
+    if (businessModel && typeof businessModel === "string") where.businessModel = businessModel;
+    if (industry && typeof industry === "string") where.industry = industry;
+    if (revenueType && typeof revenueType === "string") where.revenueType = revenueType;
+    if (pricingTier && typeof pricingTier === "string") where.pricingTier = pricingTier;
+    if (stack && typeof stack === "string") where.stack = stack;
+    if (urgency && typeof urgency === "string") where.urgency = urgency;
+    if (maintenance && typeof maintenance === "string") where.maintenance = maintenance;
 
     const take = Math.min(parseInt(limit as string, 10) || 50, 100);
     const skip = parseInt(offset as string, 10) || 0;
@@ -135,6 +171,23 @@ router.post("/", async (req, res) => {
       competitionScore,
       totalScore,
       evaluationNotes,
+      // Metadata fields
+      segment,
+      businessModel,
+      industry,
+      vertical,
+      revenueType,
+      pricingTier,
+      revenueCeiling,
+      stack,
+      dataMoat,
+      maintenance,
+      buyer,
+      userCountEstimate,
+      geography,
+      signalSource,
+      urgency,
+      validation,
     } = req.body;
 
     if (!parentPostId) {
@@ -183,6 +236,23 @@ router.post("/", async (req, res) => {
         competitionScore: typeof competitionScore === "number" ? competitionScore : null,
         totalScore: typeof totalScore === "number" ? totalScore : null,
         evaluationNotes: typeof evaluationNotes === "string" ? evaluationNotes : null,
+        // Metadata
+        segment: typeof segment === "string" ? segment : null,
+        businessModel: typeof businessModel === "string" ? businessModel : null,
+        industry: typeof industry === "string" ? industry : null,
+        vertical: typeof vertical === "string" ? vertical : null,
+        revenueType: typeof revenueType === "string" ? revenueType : null,
+        pricingTier: typeof pricingTier === "string" ? pricingTier : null,
+        revenueCeiling: typeof revenueCeiling === "number" ? revenueCeiling : null,
+        stack: typeof stack === "string" ? stack : null,
+        dataMoat: typeof dataMoat === "string" ? dataMoat : null,
+        maintenance: typeof maintenance === "string" ? maintenance : null,
+        buyer: typeof buyer === "string" ? buyer : null,
+        userCountEstimate: typeof userCountEstimate === "string" ? userCountEstimate : null,
+        geography: typeof geography === "string" ? geography : null,
+        signalSource: typeof signalSource === "string" ? signalSource : null,
+        urgency: typeof urgency === "string" ? urgency : null,
+        validation: typeof validation === "string" ? validation : null,
       },
       include: {
         subreddit: { select: { name: true } },
@@ -246,6 +316,22 @@ router.patch("/:id", async (req, res) => {
     if (typeof competitionScore === "number") data.competitionScore = competitionScore;
     if (typeof totalScore === "number") data.totalScore = totalScore;
     if (typeof evaluationNotes === "string") data.evaluationNotes = evaluationNotes;
+
+    // Metadata fields
+    const metaStringFields = [
+      'segment', 'businessModel', 'industry', 'vertical',
+      'revenueType', 'pricingTier', 'stack', 'dataMoat', 'maintenance',
+      'buyer', 'userCountEstimate', 'geography',
+      'signalSource', 'urgency', 'validation',
+    ] as const;
+    for (const field of metaStringFields) {
+      if (typeof req.body[field] === "string" || req.body[field] === null) {
+        (data as any)[field] = req.body[field];
+      }
+    }
+    if (typeof req.body.revenueCeiling === "number" || req.body.revenueCeiling === null) {
+      data.revenueCeiling = req.body.revenueCeiling;
+    }
 
     const niche = await prisma.post.update({
       where: { id },
