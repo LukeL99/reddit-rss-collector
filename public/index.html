@@ -273,6 +273,22 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    .notes-content h1, .notes-content h2, .notes-content h3 { color: #e2e8f0; margin-top: 0.75rem; margin-bottom: 0.25rem; }
+    .notes-content h1 { font-size: 1.25rem; font-weight: 700; }
+    .notes-content h2 { font-size: 1.1rem; font-weight: 600; }
+    .notes-content h3 { font-size: 1rem; font-weight: 600; }
+    .notes-content p { margin-bottom: 0.5rem; }
+    .notes-content ul, .notes-content ol { margin-left: 1.25rem; margin-bottom: 0.5rem; }
+    .notes-content li { margin-bottom: 0.15rem; }
+    .notes-content code { background: #0f172a; padding: 0.1rem 0.3rem; border-radius: 0.25rem; font-size: 0.85em; }
+    .notes-content pre { background: #0f172a; padding: 0.75rem; border-radius: 0.375rem; overflow-x: auto; margin-bottom: 0.5rem; }
+    .notes-content pre code { background: none; padding: 0; }
+    .notes-content a { color: #60a5fa; text-decoration: underline; }
+    .notes-content strong { color: #f1f5f9; }
+    .notes-content blockquote { border-left: 3px solid #475569; padding-left: 0.75rem; color: #94a3b8; margin-bottom: 0.5rem; }
+  </style>
   <script>
     let currentPage = 1;
     const pageSize = 50;
@@ -387,6 +403,73 @@
           </div>
         </div>
       `;
+    }
+
+    // Render notes section (collapsible, with edit)
+    function renderNotesSection(post) {
+      const hasNotes = post.notes && post.notes.trim();
+      const rendered = hasNotes ? marked.parse(post.notes) : '';
+      return `
+        <div class="mt-4 bg-dark-bg rounded-lg border border-dark-border overflow-hidden">
+          <div class="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-dark-border/30" onclick="toggleNotesSection('${post.id}')">
+            <h4 class="text-sm font-medium text-amber-400 flex items-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              Notes ${hasNotes ? '' : '<span class="text-dark-muted text-xs font-normal">(empty)</span>'}
+            </h4>
+            <svg id="notes-chevron-${post.id}" class="w-4 h-4 text-dark-muted transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </div>
+          <div id="notes-body-${post.id}" class="hidden border-t border-dark-border">
+            <div id="notes-view-${post.id}" class="p-3">
+              ${hasNotes ? `<div class="notes-content text-sm text-dark-text">${rendered}</div>` : '<p class="text-dark-muted text-sm italic">No notes yet. Click Edit to add some.</p>'}
+              <button onclick="editNotes('${post.id}', event)" class="mt-2 px-3 py-1 text-xs bg-dark-card border border-dark-border rounded hover:bg-dark-border text-dark-muted hover:text-white">Edit</button>
+            </div>
+            <div id="notes-edit-${post.id}" class="p-3 hidden">
+              <textarea id="notes-textarea-${post.id}" rows="8" class="w-full px-3 py-2 bg-dark-card border border-dark-border rounded-md text-white text-sm font-mono placeholder-dark-muted focus:outline-none focus:ring-2 focus:ring-amber-500 resize-y" placeholder="Add notes (markdown supported)...">${post.notes || ''}</textarea>
+              <div class="flex gap-2 mt-2">
+                <button onclick="saveNotes('${post.id}', ${post.isNiche}, event)" class="px-3 py-1 text-xs bg-amber-600 text-white rounded hover:bg-amber-700">Save</button>
+                <button onclick="cancelEditNotes('${post.id}', event)" class="px-3 py-1 text-xs bg-dark-card border border-dark-border rounded hover:bg-dark-border text-dark-muted hover:text-white">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function toggleNotesSection(postId) {
+      const body = document.getElementById('notes-body-' + postId);
+      const chevron = document.getElementById('notes-chevron-' + postId);
+      body.classList.toggle('hidden');
+      chevron.style.transform = body.classList.contains('hidden') ? '' : 'rotate(180deg)';
+    }
+
+    function editNotes(postId, e) {
+      e.stopPropagation();
+      document.getElementById('notes-view-' + postId).classList.add('hidden');
+      document.getElementById('notes-edit-' + postId).classList.remove('hidden');
+      document.getElementById('notes-textarea-' + postId).focus();
+    }
+
+    function cancelEditNotes(postId, e) {
+      e.stopPropagation();
+      document.getElementById('notes-edit-' + postId).classList.add('hidden');
+      document.getElementById('notes-view-' + postId).classList.remove('hidden');
+    }
+
+    async function saveNotes(postId, isNiche, e) {
+      e.stopPropagation();
+      const textarea = document.getElementById('notes-textarea-' + postId);
+      const notes = textarea.value.trim() || null;
+      const endpoint = isNiche ? `/api/niches/${postId}` : `/api/posts/${postId}`;
+      try {
+        await fetch(endpoint, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ notes })
+        });
+        loadPosts();
+      } catch (err) {
+        alert('Failed to save notes');
+      }
     }
 
     // Load triage status
@@ -613,6 +696,7 @@
                     </div>
                     
                     ${renderMetadataSection(post)}
+                    ${renderNotesSection(post)}
                     
                     <div class="mt-4 flex justify-end">
                       <a href="${post.url}" target="_blank" rel="noopener" class="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1">

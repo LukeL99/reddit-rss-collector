@@ -237,6 +237,7 @@ router.get("/", async (req, res) => {
         signalSource: p.signalSource,
         urgency: p.urgency,
         validation: p.validation,
+        notes: p.notes,
       })),
       total,
       limit: take,
@@ -316,6 +317,7 @@ router.patch("/:id", async (req, res) => {
       signalSource,
       urgency,
       validation,
+      notes,
     } = req.body;
 
     const data: Prisma.PostUpdateInput = {};
@@ -368,6 +370,9 @@ router.patch("/:id", async (req, res) => {
     }
     if (typeof revenueCeiling === "number" || revenueCeiling === null) {
       data.revenueCeiling = revenueCeiling;
+    }
+    if (typeof notes === "string" || notes === null) {
+      data.notes = notes;
     }
 
     const post = await prisma.post.update({
@@ -423,6 +428,7 @@ router.patch("/:id", async (req, res) => {
       signalSource: post.signalSource,
       urgency: post.urgency,
       validation: post.validation,
+      notes: post.notes,
     });
   } catch (err) {
     console.error("Error updating post:", err);

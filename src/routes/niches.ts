@@ -55,6 +55,7 @@ function formatNiche(p: any) {
     signalSource: p.signalSource,
     urgency: p.urgency,
     validation: p.validation,
+    notes: p.notes,
   };
 }
 
@@ -301,6 +302,9 @@ router.patch("/:id", async (req, res) => {
 
     const data: Prisma.PostUpdateInput = {};
 
+    if (typeof req.body.notes === "string" || req.body.notes === null) {
+      data.notes = req.body.notes;
+    }
     if (typeof nicheDescription === "string") data.nicheDescription = nicheDescription;
     if (typeof nicheSource === "string") data.nicheSource = nicheSource;
     if (typeof revenueScore === "number") data.revenueScore = revenueScore;

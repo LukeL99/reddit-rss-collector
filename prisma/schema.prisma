@@ -86,6 +86,9 @@ model Post {
   urgency          String?   // "nice-to-have" | "pain-point" | "hair-on-fire"
   validation       String?   // "single-post" | "multiple-posts" | "comments-confirm" | "existing-spend"
 
+  // Freeform notes (markdown)
+  notes            String?   @db.Text
+
   @@index([segment])
   @@index([industry])
   @@index([urgency])
