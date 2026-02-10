@@ -56,7 +56,10 @@ PASS TRIAGE (score 7-10):
 - "Is there a tool/app that does X?"
 - "I wish there was a way to..."
 - Describing a specific workflow problem with no good solution
-- Pain point with evidence of demand (upvotes, "me too" comments)
+- Specific industry/vertical pain point, even with low upvotes (e.g., dentist workflow, trucking compliance, salon scheduling)
+- Small audience but high willingness to pay — professional/B2B tools where users pay $50-500/mo
+- Narrow problem that large companies and well-funded startups won't bother solving
+- Someone in a specialized profession describing a workflow gap
 
 FAIL TRIAGE (score 0-3):
 - Someone promoting/showing off their own project
@@ -65,6 +68,8 @@ FAIL TRIAGE (score 0-3):
 - Vague wishes without specific problems
 - Problems that can't be solved with software
 - Already well-served markets (another todo app, note-taking, etc.)
+- Generic idea that would directly compete with well-funded startups or major incumbents
+- Broad market idea that requires massive scale to succeed
 
 Be VERY strict. 95% of posts should FAIL triage. Only pass posts with clear, specific, buildable pain points.`;
 
