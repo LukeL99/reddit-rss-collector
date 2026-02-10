@@ -5,6 +5,7 @@ import subredditRoutes from "./routes/subreddits.js";
 import postRoutes from "./routes/posts.js";
 import systemRoutes from "./routes/system.js";
 import filterRoutes from "./routes/filter.js";
+import nicheRoutes from "./routes/niches.js";
 import { startCollector } from "./collector.js";
 import { startBackgroundTriage } from "./filter.js";
 
@@ -25,6 +26,7 @@ app.use(express.static(path.join(__dirname, "../public")));
 app.use("/api/subreddits", subredditRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/filter", filterRoutes);
+app.use("/api/niches", nicheRoutes);
 app.use("/api", systemRoutes);
 
 // Serve index.html for root

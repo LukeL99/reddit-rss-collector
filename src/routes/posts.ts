@@ -23,11 +23,19 @@ router.get("/", async (req, res) => {
       minWtp,
       minEase,
       minCompetition,
+      isNiche,
       limit = "50",
       offset = "0",
     } = req.query;
 
     const where: Prisma.PostWhereInput = {};
+
+    // Filter by niche status (default: exclude niches)
+    if (isNiche === "true") {
+      where.isNiche = true;
+    } else if (isNiche === "false" || isNiche === undefined) {
+      where.isNiche = false;
+    }
 
     // Filter by subreddit name
     if (subreddit && typeof subreddit === "string") {
@@ -186,6 +194,13 @@ router.get("/", async (req, res) => {
         competitionScore: p.competitionScore,
         totalScore: p.totalScore,
         evaluationNotes: p.evaluationNotes,
+        // Niche fields
+        isNiche: p.isNiche,
+        parentPostId: p.parentPostId,
+        nicheSource: p.nicheSource,
+        nicheDescription: p.nicheDescription,
+        revenueScore: p.revenueScore,
+        nicheDefensibility: p.nicheDefensibility,
       })),
       total,
       limit: take,
@@ -194,6 +209,43 @@ router.get("/", async (req, res) => {
   } catch (err) {
     console.error("Error fetching posts:", err);
     res.status(500).json({ error: "Failed to fetch posts" });
+  }
+});
+
+// GET /api/posts/:id/niches - Get niches derived from a specific post
+router.get("/:id/niches", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const niches = await prisma.post.findMany({
+      where: { parentPostId: id, isNiche: true },
+      include: {
+        subreddit: { select: { name: true } },
+      },
+      orderBy: { createdUtc: "desc" },
+    });
+
+    res.json({
+      niches: niches.map((p) => ({
+        id: p.id,
+        title: p.title,
+        nicheDescription: p.nicheDescription,
+        nicheSource: p.nicheSource,
+        revenueScore: p.revenueScore,
+        nicheDefensibility: p.nicheDefensibility,
+        isEvaluated: p.isEvaluated,
+        marketSizeScore: p.marketSizeScore,
+        wtpScore: p.wtpScore,
+        easeScore: p.easeScore,
+        competitionScore: p.competitionScore,
+        totalScore: p.totalScore,
+        evaluationNotes: p.evaluationNotes,
+        createdUtc: p.createdUtc,
+      })),
+      total: niches.length,
+    });
+  } catch (err) {
+    console.error("Error fetching niches for post:", err);
+    res.status(500).json({ error: "Failed to fetch niches" });
   }
 });
 

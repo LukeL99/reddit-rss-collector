@@ -50,11 +50,23 @@ model Post {
   totalScore        Int?      @map("total_score")          // sum of above (max 40)
   evaluationNotes   String?   @map("evaluation_notes")
 
+  // Niche fields
+  isNiche            Boolean   @default(false) @map("is_niche")
+  parentPostId       String?   @map("parent_post_id")
+  parentPost         Post?     @relation("NicheToParent", fields: [parentPostId], references: [id], onDelete: SetNull)
+  niches             Post[]    @relation("NicheToParent")
+  nicheSource        String?   @map("niche_source")
+  nicheDescription   String?   @map("niche_description")
+  revenueScore       Int?      @map("revenue_score")       // 1-10
+  nicheDefensibility Int?      @map("niche_defensibility")  // 1-10
+
   @@index([subredditId])
   @@index([createdUtc])
   @@index([isFlagged])
   @@index([isTriaged])
   @@index([passedTriage])
   @@index([isEvaluated])
+  @@index([isNiche])
+  @@index([parentPostId])
   @@map("posts")
 }
