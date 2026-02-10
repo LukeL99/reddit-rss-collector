@@ -160,9 +160,13 @@ router.post("/", async (req, res) => {
   try {
     const {
       parentPostId,
+      // Accept both naming conventions
       title,
+      name,
       nicheDescription,
+      description,
       nicheSource,
+      source,
       revenueScore,
       nicheDefensibility,
       // Optional evaluation fields
@@ -189,14 +193,21 @@ router.post("/", async (req, res) => {
       signalSource,
       urgency,
       validation,
+      // Notes
+      notes,
     } = req.body;
+
+    // Support friendly aliases: name→title, description→nicheDescription, source→nicheSource
+    const resolvedTitle = title || name;
+    const resolvedDescription = nicheDescription || description;
+    const resolvedSource = nicheSource || source;
 
     if (!parentPostId) {
       return res.status(400).json({ error: "parentPostId is required" });
     }
 
-    if (!title && !nicheDescription) {
-      return res.status(400).json({ error: "title or nicheDescription is required" });
+    if (!resolvedTitle && !resolvedDescription) {
+      return res.status(400).json({ error: "title/name or nicheDescription/description is required" });
     }
 
     // Verify parent post exists and is not itself a niche
@@ -209,14 +220,14 @@ router.post("/", async (req, res) => {
       return res.status(404).json({ error: "Parent post not found" });
     }
 
-    const nicheTitle = title || nicheDescription!.substring(0, 200);
+    const nicheTitle = resolvedTitle || resolvedDescription!.substring(0, 200);
 
     const niche = await prisma.post.create({
       data: {
         redditId: `niche-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
         subredditId: parentPost.subredditId,
         title: nicheTitle,
-        body: nicheDescription || null,
+        body: resolvedDescription || null,
         author: "glitch",
         url: "",
         score: 0,
@@ -224,8 +235,8 @@ router.post("/", async (req, res) => {
         createdUtc: new Date(),
         isNiche: true,
         parentPostId,
-        nicheSource: nicheSource || "manual",
-        nicheDescription: nicheDescription || null,
+        nicheSource: resolvedSource || "manual",
+        nicheDescription: resolvedDescription || null,
         revenueScore: typeof revenueScore === "number" ? revenueScore : null,
         nicheDefensibility: typeof nicheDefensibility === "number" ? nicheDefensibility : null,
         // Evaluation
@@ -254,6 +265,8 @@ router.post("/", async (req, res) => {
         signalSource: typeof signalSource === "string" ? signalSource : null,
         urgency: typeof urgency === "string" ? urgency : null,
         validation: typeof validation === "string" ? validation : null,
+        // Notes
+        notes: typeof notes === "string" ? notes : null,
       },
       include: {
         subreddit: { select: { name: true } },
