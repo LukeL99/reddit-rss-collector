@@ -204,7 +204,7 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-dark-muted mb-1">Min Total: <span id="niche-min-total-value">0</span></label>
-            <input type="range" id="niche-filter-min-total" min="0" max="40" value="0" class="w-full accent-purple-500">
+            <input type="range" id="niche-filter-min-total" min="0" max="50" value="0" class="w-full accent-purple-500">
           </div>
           <div>
             <label class="block text-sm font-medium text-dark-muted mb-1">Min Revenue: <span id="niche-min-revenue-value">0</span></label>
@@ -215,38 +215,69 @@
             <input type="range" id="niche-filter-min-def" min="0" max="10" value="0" class="w-full accent-blue-500">
           </div>
         </div>
-        <div class="mt-4 flex items-center gap-4">
+        <!-- Metadata Filters for Niches -->
+        <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 p-3 bg-dark-bg rounded-lg border border-dark-border">
+          <div class="col-span-2 md:col-span-4 text-xs font-medium text-emerald-400 uppercase tracking-wide">Metadata Filters</div>
+          <div>
+            <label class="block text-xs text-dark-muted mb-1">Segment</label>
+            <select id="niche-filter-segment" class="w-full px-2 py-1.5 bg-dark-card border border-dark-border rounded text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+              <option value="">All</option>
+              <option value="consumer">Consumer</option>
+              <option value="smb">SMB</option>
+              <option value="mid-market">Mid-Market</option>
+              <option value="enterprise">Enterprise</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-dark-muted mb-1">Industry</label>
+            <select id="niche-filter-industry" class="w-full px-2 py-1.5 bg-dark-card border border-dark-border rounded text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+              <option value="">All</option>
+              <option value="saas">SaaS</option>
+              <option value="ecommerce">E-commerce</option>
+              <option value="healthcare">Healthcare</option>
+              <option value="finance">Finance</option>
+              <option value="legal">Legal</option>
+              <option value="real-estate">Real Estate</option>
+              <option value="education">Education</option>
+              <option value="marketing">Marketing</option>
+              <option value="dev-tools">Dev Tools</option>
+              <option value="food-bev">Food & Bev</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-dark-muted mb-1">Pricing Tier</label>
+            <select id="niche-filter-pricing" class="w-full px-2 py-1.5 bg-dark-card border border-dark-border rounded text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+              <option value="">All</option>
+              <option value="free">Free</option>
+              <option value="low">Low</option>
+              <option value="mid">Mid</option>
+              <option value="high">High</option>
+              <option value="enterprise">Enterprise</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-dark-muted mb-1">Urgency</label>
+            <select id="niche-filter-urgency" class="w-full px-2 py-1.5 bg-dark-card border border-dark-border rounded text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500">
+              <option value="">All</option>
+              <option value="nice-to-have">Nice to Have</option>
+              <option value="pain-point">Pain Point</option>
+              <option value="hair-on-fire">Hair on Fire 🔥</option>
+            </select>
+          </div>
+        </div>
+        <div class="mt-4 flex flex-wrap items-center gap-4">
           <label class="flex items-center space-x-2 cursor-pointer">
             <input type="checkbox" id="niche-filter-evaluated" class="w-4 h-4 rounded bg-dark-bg border-dark-border text-purple-500 focus:ring-purple-500">
             <span class="text-sm text-dark-muted">Evaluated only</span>
           </label>
+          <div class="flex-1"></div>
           <button onclick="resetNicheFilters()" class="px-3 py-1.5 text-sm text-dark-muted hover:text-white border border-dark-border rounded-md hover:bg-dark-border">Reset Filters</button>
+          <span id="niche-filter-status" class="text-sm text-dark-muted"></span>
         </div>
       </div>
 
-      <!-- Niches Table (Desktop) -->
-      <div class="hidden md:block bg-dark-card rounded-lg border border-dark-border overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm text-left">
-            <thead class="bg-dark-bg border-b border-dark-border">
-              <tr>
-                <th class="px-4 py-3 text-dark-muted font-medium">Description</th>
-                <th class="px-4 py-3 text-dark-muted font-medium">Parent Opportunity</th>
-                <th class="px-4 py-3 text-dark-muted font-medium text-center">Revenue</th>
-                <th class="px-4 py-3 text-dark-muted font-medium text-center">Defensibility</th>
-                <th class="px-4 py-3 text-dark-muted font-medium text-center">Total</th>
-                <th class="px-4 py-3 text-dark-muted font-medium">Source</th>
-              </tr>
-            </thead>
-            <tbody id="niches-table-body">
-              <tr><td colspan="6" class="px-4 py-8 text-center text-dark-muted">Loading niches...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Niches Cards (Mobile) -->
-      <div id="niches-cards-container" class="md:hidden space-y-3">
+      <!-- Niches Cards -->
+      <div id="niches-cards-container" class="space-y-3">
         <p class="text-dark-muted text-center py-8">Loading niches...</p>
       </div>
 
@@ -837,13 +868,98 @@
       document.getElementById('niche-filter-min-def').value = 0;
       document.getElementById('niche-min-def-value').textContent = '0';
       document.getElementById('niche-filter-evaluated').checked = false;
+      document.getElementById('niche-filter-segment').value = '';
+      document.getElementById('niche-filter-industry').value = '';
+      document.getElementById('niche-filter-pricing').value = '';
+      document.getElementById('niche-filter-urgency').value = '';
       nicheCurrentPage = 1;
       loadNiches();
     }
 
-    function scoreBadge(score, max, color) {
-      if (score === null || score === undefined) return '<span class="text-dark-muted">—</span>';
-      return `<span class="px-2 py-0.5 text-xs font-medium rounded bg-${color}-600 text-white">${score}/${max}</span>`;
+    // Niche score color helpers
+    function nicheScoreColor(score) {
+      if (score === null || score === undefined) return 'text-dark-muted';
+      if (score >= 8) return 'text-green-400';
+      if (score >= 5) return 'text-yellow-400';
+      return 'text-red-400';
+    }
+
+    function nicheTotalColor(score) {
+      if (score === null || score === undefined) return 'text-dark-muted';
+      if (score >= 35) return 'text-green-400';
+      if (score >= 25) return 'text-yellow-400';
+      return 'text-red-400';
+    }
+
+    function nicheMetaBadge(label, value, colorClass) {
+      if (!value) return '';
+      return `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${colorClass}">${label ? label + ': ' : ''}${value}</span>`;
+    }
+
+    function renderNicheNotesSection(niche) {
+      const hasNotes = niche.notes && niche.notes.trim();
+      const rendered = hasNotes ? marked.parse(niche.notes) : '';
+      const safeId = niche.id.replace(/[^a-zA-Z0-9]/g, '');
+      return `
+        <div class="mt-3 bg-dark-bg rounded-lg border border-dark-border overflow-hidden">
+          <div class="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-dark-border/30" onclick="toggleNicheNotes('${safeId}')">
+            <h4 class="text-sm font-medium text-amber-400 flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              Notes ${hasNotes ? '' : '<span class="text-dark-muted text-xs font-normal">(empty)</span>'}
+            </h4>
+            <svg id="niche-notes-chevron-${safeId}" class="w-4 h-4 text-dark-muted transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </div>
+          <div id="niche-notes-body-${safeId}" class="hidden border-t border-dark-border">
+            <div id="niche-notes-view-${safeId}" class="p-3">
+              ${hasNotes ? `<div class="notes-content text-sm text-dark-text">${rendered}</div>` : '<p class="text-dark-muted text-sm italic">No notes yet. Click Edit to add some.</p>'}
+              <button onclick="editNicheNotes('${niche.id}', '${safeId}', event)" class="mt-2 px-3 py-1 text-xs bg-dark-card border border-dark-border rounded hover:bg-dark-border text-dark-muted hover:text-white">Edit</button>
+            </div>
+            <div id="niche-notes-edit-${safeId}" class="p-3 hidden">
+              <textarea id="niche-notes-textarea-${safeId}" rows="6" class="w-full px-3 py-2 bg-dark-card border border-dark-border rounded-md text-white text-sm font-mono placeholder-dark-muted focus:outline-none focus:ring-2 focus:ring-amber-500 resize-y" placeholder="Add notes (markdown supported)...">${(niche.notes || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
+              <div class="flex gap-2 mt-2">
+                <button onclick="saveNicheNotes('${niche.id}', '${safeId}', event)" class="px-3 py-1 text-xs bg-amber-600 text-white rounded hover:bg-amber-700">Save</button>
+                <button onclick="cancelNicheNotes('${safeId}', event)" class="px-3 py-1 text-xs bg-dark-card border border-dark-border rounded hover:bg-dark-border text-dark-muted hover:text-white">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function toggleNicheNotes(safeId) {
+      const body = document.getElementById('niche-notes-body-' + safeId);
+      const chevron = document.getElementById('niche-notes-chevron-' + safeId);
+      body.classList.toggle('hidden');
+      chevron.style.transform = body.classList.contains('hidden') ? '' : 'rotate(180deg)';
+    }
+
+    function editNicheNotes(nicheId, safeId, e) {
+      e.stopPropagation();
+      document.getElementById('niche-notes-view-' + safeId).classList.add('hidden');
+      document.getElementById('niche-notes-edit-' + safeId).classList.remove('hidden');
+      document.getElementById('niche-notes-textarea-' + safeId).focus();
+    }
+
+    function cancelNicheNotes(safeId, e) {
+      e.stopPropagation();
+      document.getElementById('niche-notes-edit-' + safeId).classList.add('hidden');
+      document.getElementById('niche-notes-view-' + safeId).classList.remove('hidden');
+    }
+
+    async function saveNicheNotes(nicheId, safeId, e) {
+      e.stopPropagation();
+      const textarea = document.getElementById('niche-notes-textarea-' + safeId);
+      const notes = textarea.value.trim() || null;
+      try {
+        await fetch(`/api/niches/${nicheId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ notes })
+        });
+        loadNiches();
+      } catch (err) {
+        alert('Failed to save notes');
+      }
     }
 
     async function loadNiches() {
@@ -852,6 +968,10 @@
       const minRevenue = document.getElementById('niche-filter-min-revenue').value;
       const minDef = document.getElementById('niche-filter-min-def').value;
       const evaluated = document.getElementById('niche-filter-evaluated').checked;
+      const filterSegment = document.getElementById('niche-filter-segment').value;
+      const filterIndustry = document.getElementById('niche-filter-industry').value;
+      const filterPricing = document.getElementById('niche-filter-pricing').value;
+      const filterUrgency = document.getElementById('niche-filter-urgency').value;
 
       const params = new URLSearchParams();
       if (search) params.append('search', search);
@@ -859,69 +979,104 @@
       if (minRevenue > 0) params.append('minRevenueScore', minRevenue);
       if (minDef > 0) params.append('minDefensibility', minDef);
       if (evaluated) params.append('evaluated', 'true');
+      if (filterSegment) params.append('segment', filterSegment);
+      if (filterIndustry) params.append('industry', filterIndustry);
+      if (filterPricing) params.append('pricingTier', filterPricing);
+      if (filterUrgency) params.append('urgency', filterUrgency);
       params.append('limit', pageSize);
       params.append('offset', (nicheCurrentPage - 1) * pageSize);
 
       try {
         const res = await fetch(`/api/niches?${params}`);
         const data = await res.json();
+        window.nichesCache = data.niches;
 
-        const tbody = document.getElementById('niches-table-body');
         const cardsContainer = document.getElementById('niches-cards-container');
+        const statusEl = document.getElementById('niche-filter-status');
+        statusEl.textContent = `${data.total} niche${data.total !== 1 ? 's' : ''} found`;
+
         if (data.niches.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-dark-muted">No niches found</td></tr>';
           cardsContainer.innerHTML = '<p class="text-dark-muted text-center py-8">No niches found</p>';
         } else {
-          // Desktop table
-          tbody.innerHTML = data.niches.map(n => `
-            <tr class="border-b border-dark-border hover:bg-dark-border/30">
-              <td class="px-4 py-3">
-                <div class="font-medium text-white">${n.title}</div>
-                ${n.nicheDescription && n.nicheDescription !== n.title ? `<div class="text-xs text-dark-muted mt-1">${n.nicheDescription.substring(0, 150)}${n.nicheDescription.length > 150 ? '...' : ''}</div>` : ''}
-              </td>
-              <td class="px-4 py-3">
-                ${n.parentPost ? `<a href="${n.parentPost.url}" target="_blank" class="text-blue-400 hover:text-blue-300 text-sm">${n.parentPost.title.substring(0, 60)}${n.parentPost.title.length > 60 ? '...' : ''}</a>` : '<span class="text-dark-muted">—</span>'}
-              </td>
-              <td class="px-4 py-3 text-center">${scoreBadge(n.revenueScore, 10, 'green')}</td>
-              <td class="px-4 py-3 text-center">${scoreBadge(n.nicheDefensibility, 10, 'blue')}</td>
-              <td class="px-4 py-3 text-center">${scoreBadge(n.totalScore, 40, 'purple')}</td>
-              <td class="px-4 py-3">
-                <span class="text-xs px-2 py-1 rounded bg-dark-bg text-dark-muted">${n.nicheSource || '—'}</span>
-                ${n.industry ? `<span class="text-xs px-2 py-1 rounded bg-emerald-900/50 text-emerald-400 ml-1">${n.industry}</span>` : ''}
-                ${n.urgency ? `<span class="text-xs px-2 py-1 rounded ${n.urgency === 'hair-on-fire' ? 'bg-red-900/50 text-red-400' : n.urgency === 'pain-point' ? 'bg-orange-900/50 text-orange-400' : 'bg-gray-700 text-gray-400'} ml-1">${n.urgency}</span>` : ''}
-              </td>
-            </tr>
-          `).join('');
-
-          // Mobile cards
           cardsContainer.innerHTML = data.niches.map(n => {
             const descText = n.nicheDescription && n.nicheDescription !== n.title ? n.nicheDescription : '';
-            const cardId = 'niche-card-' + n.id.replace(/[^a-zA-Z0-9]/g, '');
-            const scoreItems = [
-              n.revenueScore !== null ? `<span class="px-1.5 py-0.5 rounded bg-green-600/20 text-green-400">R:${n.revenueScore}</span>` : '',
-              n.nicheDefensibility !== null ? `<span class="px-1.5 py-0.5 rounded bg-blue-600/20 text-blue-400">D:${n.nicheDefensibility}</span>` : '',
-              n.marketSizeScore !== null ? `<span class="px-1.5 py-0.5 rounded bg-yellow-600/20 text-yellow-400">M:${n.marketSizeScore}</span>` : '',
-              n.wtpScore !== null ? `<span class="px-1.5 py-0.5 rounded bg-orange-600/20 text-orange-400">W:${n.wtpScore}</span>` : '',
-              n.easeScore !== null ? `<span class="px-1.5 py-0.5 rounded bg-teal-600/20 text-teal-400">E:${n.easeScore}</span>` : '',
-              n.competitionScore !== null ? `<span class="px-1.5 py-0.5 rounded bg-red-600/20 text-red-400">C:${n.competitionScore}</span>` : '',
+
+            // Score pills: R / W / E / C / N
+            const rScore = n.revenueScore;
+            const wScore = n.wtpScore;
+            const eScore = n.easeScore;
+            const cScore = n.competitionScore;
+            const nScore = n.nicheDefensibility;
+            const total = n.totalScore;
+
+            const scoreRow = `
+              <div class="flex flex-wrap items-center gap-1.5 text-xs font-mono">
+                <span class="px-1.5 py-0.5 rounded bg-green-900/40 ${nicheScoreColor(rScore)}" title="Revenue">R:${rScore ?? '—'}</span>
+                <span class="px-1.5 py-0.5 rounded bg-orange-900/40 ${nicheScoreColor(wScore)}" title="Willingness to Pay">W:${wScore ?? '—'}</span>
+                <span class="px-1.5 py-0.5 rounded bg-teal-900/40 ${nicheScoreColor(eScore)}" title="Ease">E:${eScore ?? '—'}</span>
+                <span class="px-1.5 py-0.5 rounded bg-red-900/40 ${nicheScoreColor(cScore)}" title="Competition">C:${cScore ?? '—'}</span>
+                <span class="px-1.5 py-0.5 rounded bg-blue-900/40 ${nicheScoreColor(nScore)}" title="Niche Defensibility">N:${nScore ?? '—'}</span>
+                <span class="text-dark-muted mx-0.5">=</span>
+                <span class="px-2 py-0.5 rounded ${total !== null ? 'bg-purple-600 text-white font-bold' : 'bg-dark-bg text-dark-muted'}">${total !== null ? total + '/50' : '—'}</span>
+              </div>
+            `;
+
+            // Metadata badges
+            const badges = [
+              nicheMetaBadge('', n.segment, 'bg-sky-900/50 text-sky-400'),
+              nicheMetaBadge('', n.businessModel, 'bg-violet-900/50 text-violet-400'),
+              nicheMetaBadge('', n.industry, 'bg-emerald-900/50 text-emerald-400'),
+              nicheMetaBadge('', n.pricingTier, 'bg-amber-900/50 text-amber-400'),
+              n.revenueCeiling ? nicheMetaBadge('ceiling', '$' + n.revenueCeiling.toLocaleString() + '/mo', 'bg-green-900/50 text-green-400') : '',
+              nicheMetaBadge('', n.stack, 'bg-cyan-900/50 text-cyan-400'),
+              nicheMetaBadge('', n.maintenance, 'bg-gray-700 text-gray-300'),
+              n.urgency ? nicheMetaBadge('', n.urgency === 'hair-on-fire' ? '🔥 ' + n.urgency : n.urgency, n.urgency === 'hair-on-fire' ? 'bg-red-900/50 text-red-400' : n.urgency === 'pain-point' ? 'bg-orange-900/50 text-orange-400' : 'bg-gray-700 text-gray-400') : '',
+              nicheMetaBadge('', n.dataMoat, 'bg-indigo-900/50 text-indigo-400'),
+              nicheMetaBadge('', n.buyer, 'bg-pink-900/50 text-pink-400'),
+              nicheMetaBadge('', n.geography, 'bg-slate-700 text-slate-300'),
+              nicheMetaBadge('', n.validation, 'bg-lime-900/50 text-lime-400'),
             ].filter(Boolean).join(' ');
 
+            // Score-based left border
+            const borderColor = total !== null ? (total >= 35 ? 'border-l-4 border-green-500' : total >= 25 ? 'border-l-4 border-yellow-500' : 'border-l-4 border-dark-border') : '';
+
             return `
-              <div class="bg-dark-card rounded-lg border border-dark-border p-4">
-                <div class="font-medium text-white text-sm leading-snug">${n.title}</div>
-                ${descText ? `
-                  <div id="${cardId}" class="text-xs text-dark-muted mt-1.5 leading-relaxed niche-desc-clamp cursor-pointer" onclick="this.classList.toggle('niche-desc-clamp')">${descText}</div>
-                ` : ''}
-                ${n.parentPost ? `
-                  <div class="mt-2">
-                    <a href="${n.parentPost.url}" target="_blank" class="text-blue-400 hover:text-blue-300 text-xs">↳ ${n.parentPost.title.substring(0, 80)}${n.parentPost.title.length > 80 ? '...' : ''}</a>
+              <div class="bg-dark-card rounded-lg border border-dark-border ${borderColor} overflow-hidden">
+                <div class="p-4">
+                  <!-- Title -->
+                  <h3 class="font-semibold text-white leading-snug">${n.title}</h3>
+
+                  <!-- Scores row -->
+                  <div class="mt-2.5">${scoreRow}</div>
+
+                  <!-- Metadata badges -->
+                  ${badges ? `<div class="mt-2.5 flex flex-wrap gap-1.5">${badges}</div>` : ''}
+
+                  <!-- Description -->
+                  ${descText ? `<p class="mt-3 text-sm text-dark-muted leading-relaxed">${descText}</p>` : ''}
+
+                  <!-- Parent post link -->
+                  ${n.parentPost ? `
+                    <div class="mt-2.5">
+                      <a href="${n.parentPost.url}" target="_blank" class="text-blue-400 hover:text-blue-300 text-xs inline-flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                        ${n.parentPost.title.substring(0, 100)}${n.parentPost.title.length > 100 ? '…' : ''}
+                      </a>
+                    </div>
+                  ` : ''}
+
+                  <!-- Evaluation notes -->
+                  ${n.evaluationNotes ? `<p class="mt-2.5 text-xs text-dark-muted italic border-l-2 border-purple-500/50 pl-2">${n.evaluationNotes}</p>` : ''}
+
+                  <!-- Collapsible Notes (markdown) -->
+                  ${renderNicheNotesSection(n)}
+
+                  <!-- Footer -->
+                  <div class="mt-3 flex items-center justify-between text-xs text-dark-muted">
+                    <span>${n.nicheSource || ''}</span>
+                    <code class="bg-dark-bg px-1.5 py-0.5 rounded cursor-pointer hover:text-white" onclick="navigator.clipboard.writeText('${n.id}'); event.stopPropagation();" title="Click to copy ID">${n.id.substring(0, 8)}…</code>
                   </div>
-                ` : ''}
-                <div class="mt-2.5 flex flex-wrap items-center gap-1.5 text-xs font-medium">
-                  ${scoreItems || '<span class="text-dark-muted">No scores</span>'}
-                  ${n.totalScore !== null ? `<span class="px-1.5 py-0.5 rounded bg-purple-600 text-white font-bold ml-1">= ${n.totalScore}</span>` : ''}
                 </div>
-                ${n.nicheSource ? `<div class="mt-2"><span class="text-xs px-2 py-0.5 rounded bg-dark-bg text-dark-muted">${n.nicheSource}</span></div>` : ''}
               </div>
             `;
           }).join('');
@@ -940,7 +1095,6 @@
         }
       } catch (err) {
         console.error('Error fetching niches:', err);
-        document.getElementById('niches-table-body').innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-red-400">Failed to load niches</td></tr>';
         document.getElementById('niches-cards-container').innerHTML = '<p class="text-red-400 text-center py-8">Failed to load niches</p>';
       }
     }
@@ -1008,6 +1162,10 @@
       debouncedLoadNiches();
     });
     document.getElementById('niche-filter-evaluated').addEventListener('change', debouncedLoadNiches);
+    document.getElementById('niche-filter-segment').addEventListener('change', debouncedLoadNiches);
+    document.getElementById('niche-filter-industry').addEventListener('change', debouncedLoadNiches);
+    document.getElementById('niche-filter-pricing').addEventListener('change', debouncedLoadNiches);
+    document.getElementById('niche-filter-urgency').addEventListener('change', debouncedLoadNiches);
 
     // Initial load
     loadPosts();

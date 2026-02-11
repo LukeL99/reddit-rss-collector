@@ -136,7 +136,7 @@ router.get("/", async (req, res) => {
           subreddit: { select: { name: true } },
           parentPost: { select: { id: true, title: true, url: true } },
         },
-        orderBy: { createdUtc: "desc" },
+        orderBy: [{ totalScore: "desc" }, { createdUtc: "desc" }],
         take,
         skip,
       }),
