@@ -52,4 +52,59 @@ router.post("/collect", async (_req, res) => {
   }
 });
 
+// GET /api/stats - Comprehensive stats (no pagination confusion)
+router.get("/stats", async (_req, res) => {
+  try {
+    const [
+      totalPosts,
+      totalNiches,
+      postsPassedTriage,
+      postsEvaluated,
+      postsUnevaluated,
+      nichesScored,
+      nichesUnscored,
+      nichesFlagged,
+      avgTotalScore,
+      topNiches,
+    ] = await Promise.all([
+      prisma.post.count({ where: { isNiche: false } }),
+      prisma.post.count({ where: { isNiche: true } }),
+      prisma.post.count({ where: { isNiche: false, passedTriage: true } }),
+      prisma.post.count({ where: { isNiche: false, passedTriage: true, isEvaluated: true } }),
+      prisma.post.count({ where: { isNiche: false, passedTriage: true, isEvaluated: false } }),
+      prisma.post.count({ where: { isNiche: true, totalScore: { not: null } } }),
+      prisma.post.count({ where: { isNiche: true, totalScore: null } }),
+      prisma.post.count({ where: { isNiche: true, isFlagged: true } }),
+      prisma.post.aggregate({ where: { isNiche: true, totalScore: { not: null } }, _avg: { totalScore: true } }),
+      prisma.post.findMany({
+        where: { isNiche: true, totalScore: { not: null } },
+        orderBy: { totalScore: "desc" },
+        take: 10,
+        select: { id: true, title: true, totalScore: true, revenueScore: true, wtpScore: true, easeScore: true, competitionScore: true, nicheDefensibility: true, vertical: true, segment: true },
+      }),
+    ]);
+
+    res.json({
+      posts: {
+        total: totalPosts,
+        passedTriage: postsPassedTriage,
+        evaluated: postsEvaluated,
+        unevaluated: postsUnevaluated,
+      },
+      niches: {
+        total: totalNiches,
+        scored: nichesScored,
+        unscored: nichesUnscored,
+        flagged: nichesFlagged,
+        avgScore: avgTotalScore._avg.totalScore ? Math.round(avgTotalScore._avg.totalScore * 10) / 10 : null,
+      },
+      topNiches,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error("Stats failed:", err);
+    res.status(500).json({ error: "Failed to compute stats" });
+  }
+});
+
 export default router;
