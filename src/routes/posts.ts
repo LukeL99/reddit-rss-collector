@@ -436,4 +436,29 @@ router.patch("/:id", async (req, res) => {
   }
 });
 
+// DELETE /api/posts/:id - Delete a post
+router.delete("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const existing = await prisma.post.findUnique({
+      where: { id },
+      select: { id: true, isNiche: true },
+    });
+
+    if (!existing) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    // If it has child niches, delete them first
+    await prisma.post.deleteMany({ where: { parentPostId: id } });
+    await prisma.post.delete({ where: { id } });
+
+    res.json({ deleted: true, id });
+  } catch (err) {
+    console.error("Error deleting post:", err);
+    res.status(500).json({ error: "Failed to delete post" });
+  }
+});
+
 export default router;
